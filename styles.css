@@ -1,0 +1,770 @@
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Lexend:wght@400;500;600;700&display=swap');
+
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('https://cdn.jsdelivr.net/npm/opendyslexic@0.1.1/font/OpenDyslexic-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('https://cdn.jsdelivr.net/npm/opendyslexic@0.1.1/font/OpenDyslexic-Bold.otf') format('opentype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+/* ==========================================================================
+   CASSETTE FUTURISM & HARDWARE DESIGN TOKENS (:root)
+   ========================================================================== */
+:root {
+  /* Industrial Lab Palette (Light Mode Default) */
+  --hw-bg-base: #ece8df;          /* Industrial matte chassis cream */
+  --hw-bg-panel: #f5f2eb;         /* Instrument panel faceplate */
+  --hw-bg-inset: #dfdbd1;         /* Recessed switch wells / insets */
+  --hw-bg-card: #ffffff;          /* Data / Paper card stock */
+  
+  --hw-text-primary: #1e2024;     /* Crisp carbon black */
+  --hw-text-secondary: #5a5f6b;   /* Instrument silkscreen slate */
+  --hw-text-muted: #848b98;       /* Subtle chassis labeling */
+  
+  --hw-border: #23252a;           /* Sharp 2px high-contrast tactile border */
+  --hw-border-subtle: #40444d;    /* Component perimeter divider */
+  
+  /* Precision Analog Accents */
+  --hw-orange: #eb5e28;           /* Vintage Safety Orange (Primary Action) */
+  --hw-orange-hover: #d14915;
+  --hw-amber: #d97706;            /* Phosphor Warm Amber (Warning/Time) */
+  --hw-green-led: #16a34a;        /* Active Circuit Phosphor Green */
+  --hw-green-glow: #22c55e;
+  --hw-cyan: #0284c7;             /* Instrument Laser / Scope Blue */
+  --hw-red-led: #dc2626;          /* Power / Danger LED */
+  
+  /* Highlighting & Reading Tokens */
+  --tts-word-highlight: #fde047;  /* High-contrast yellow */
+  --tts-sentence-highlight: rgba(253, 224, 71, 0.28);
+  --ruler-overlay: rgba(20, 22, 26, 0.72);
+  --ruler-color: #eb5e28;
+  --ruler-height: 52px;
+
+  /* Typography */
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+  --font-body: 'Lexend', 'Atkinson Hyperlegible', sans-serif;
+  
+  /* Tactile Shadows */
+  --hw-shadow-hard: 3px 3px 0px var(--hw-border);
+  --hw-shadow-hard-sm: 2px 2px 0px var(--hw-border);
+  --hw-shadow-inset: inset 2px 2px 3px rgba(0, 0, 0, 0.35);
+  --hw-shadow-inset-sm: inset 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* --- THEME 1: DEEP SLATE RACK (Dark Hardware Mode) --- */
+body[data-theme="dark-velvet"], body[data-theme="slate-rack"] {
+  --hw-bg-base: #141619;
+  --hw-bg-panel: #1e2126;
+  --hw-bg-inset: #111316;
+  --hw-bg-card: #252930;
+  --hw-text-primary: #f0f2f5;
+  --hw-text-secondary: #9da4b2;
+  --hw-text-muted: #676e7d;
+  --hw-border: #383e4a;
+  --hw-border-subtle: #4d5464;
+  --hw-orange: #ff6b35;
+  --hw-orange-hover: #e8551f;
+  --hw-amber: #f59e0b;
+  --hw-green-led: #22c55e;
+  --hw-cyan: #38bdf8;
+  --tts-word-highlight: #facc15;
+  --tts-sentence-highlight: rgba(250, 204, 21, 0.22);
+  --ruler-overlay: rgba(0, 0, 0, 0.88);
+  --ruler-color: #ff6b35;
+}
+
+/* --- THEME 2: BRAUN / LAB MATTE CREAM --- */
+body[data-theme="cream"] {
+  --hw-bg-base: #eae6dc;
+  --hw-bg-panel: #f4f0e6;
+  --hw-bg-inset: #ded8cb;
+  --hw-bg-card: #ffffff;
+  --hw-text-primary: #212328;
+  --hw-text-secondary: #5e6471;
+  --hw-border: #2b2e36;
+  --hw-orange: #e0531c;
+  --ruler-color: #e0531c;
+}
+
+/* --- THEME 3: MIL-SPEC PHOSPHOR GREEN TERMINAL --- */
+body[data-theme="forest-calm"], body[data-theme="phosphor-green"] {
+  --hw-bg-base: #0c1510;
+  --hw-bg-panel: #122119;
+  --hw-bg-inset: #09100c;
+  --hw-bg-card: #182d22;
+  --hw-text-primary: #34d399;
+  --hw-text-secondary: #059669;
+  --hw-border: #1f4030;
+  --hw-orange: #10b981;
+  --hw-amber: #34d399;
+  --hw-green-led: #10b981;
+  --tts-word-highlight: #34d399;
+  --tts-sentence-highlight: rgba(52, 211, 153, 0.2);
+  --ruler-color: #10b981;
+}
+
+/* --- THEME 4: MONOCHROMATIC AMBER CRT --- */
+body[data-theme="lavender-soft"], body[data-theme="amber-crt"] {
+  --hw-bg-base: #141006;
+  --hw-bg-panel: #211a0a;
+  --hw-bg-inset: #0d0a04;
+  --hw-bg-card: #2c230e;
+  --hw-text-primary: #fbbf24;
+  --hw-text-secondary: #d97706;
+  --hw-border: #4d3a14;
+  --hw-orange: #f59e0b;
+  --hw-amber: #fbbf24;
+  --hw-green-led: #f59e0b;
+  --tts-word-highlight: #fbbf24;
+  --tts-sentence-highlight: rgba(251, 191, 36, 0.25);
+  --ruler-color: #f59e0b;
+}
+
+/* --- THEME 5: HIGH-CONTRAST INDUSTRIAL (Yellow on Matte Black) --- */
+body[data-theme="high-contrast"] {
+  --hw-bg-base: #000000;
+  --hw-bg-panel: #111111;
+  --hw-bg-inset: #000000;
+  --hw-bg-card: #1a1a1a;
+  --hw-text-primary: #ffff00;
+  --hw-text-secondary: #ffffff;
+  --hw-border: #ffff00;
+  --hw-border-subtle: #ffff00;
+  --hw-orange: #ffff00;
+  --hw-green-led: #00ff00;
+  --tts-word-highlight: #ffff00;
+  --tts-sentence-highlight: rgba(255, 255, 0, 0.35);
+  --ruler-color: #ffff00;
+}
+
+/* ==========================================================================
+   GLOBAL HARDWARE STYLING & RESETS
+   ========================================================================== */
+body {
+  background-color: var(--hw-bg-base);
+  color: var(--hw-text-primary);
+  font-family: var(--font-body);
+  letter-spacing: -0.01em;
+}
+
+.font-mono, kbd, code, .hw-label {
+  font-family: var(--font-mono) !important;
+}
+
+/* Font families */
+.font-lexend { font-family: 'Lexend', sans-serif !important; }
+.font-atkinson { font-family: 'Atkinson Hyperlegible', sans-serif !important; }
+.font-opendyslexic { font-family: 'OpenDyslexic', sans-serif !important; }
+.font-inter { font-family: 'Inter', sans-serif !important; }
+
+/* ==========================================================================
+   TACTILE BUTTONS & HARDWARE SWITCHES (SKEUOMORPHIC)
+   ========================================================================== */
+.hw-btn {
+  background-color: var(--hw-bg-panel);
+  color: var(--hw-text-primary);
+  border: 2px solid var(--hw-border);
+  border-radius: 3px;
+  box-shadow: var(--hw-shadow-hard-sm);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.48rem 0.95rem;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.04s ease, box-shadow 0.04s ease, background-color 0.1s ease;
+}
+
+.hw-btn:hover {
+  background-color: var(--hw-bg-card);
+}
+
+.hw-btn:active, .hw-btn.active, .hw-btn.active-toggle {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px var(--hw-border);
+  background-color: var(--hw-bg-inset);
+}
+
+.hw-btn-lg {
+  padding: 0.65rem 1.25rem;
+  font-size: 0.88rem;
+  font-weight: 800;
+  min-height: 44px;
+  gap: 0.55rem;
+  box-shadow: var(--hw-shadow-hard);
+}
+
+.hw-btn-sm {
+  padding: 0.32rem 0.65rem;
+  font-size: 0.72rem;
+  min-height: 30px;
+  gap: 0.35rem;
+}
+
+.hw-btn-orange {
+  background-color: var(--hw-orange);
+  color: #ffffff !important;
+  border-color: #1a1a1a;
+}
+.hw-btn-orange:hover {
+  background-color: var(--hw-orange-hover);
+}
+
+.hw-btn-green {
+  background-color: var(--hw-green-led);
+  color: #ffffff !important;
+  border-color: #143e1d;
+}
+.hw-btn-green:hover {
+  background-color: #15803d;
+}
+
+.hw-btn-cyan {
+  background-color: var(--hw-cyan);
+  color: #ffffff !important;
+  border-color: #0c4a6e;
+}
+.hw-btn-cyan:hover {
+  background-color: #0369a1;
+}
+
+.hw-btn-amber {
+  background-color: var(--hw-amber);
+  color: #ffffff !important;
+  border-color: #78350f;
+}
+.hw-btn-amber:hover {
+  background-color: #b45309;
+}
+
+/* Tactile Selector Box */
+.hw-select {
+  background-color: var(--hw-bg-panel);
+  color: var(--hw-text-primary);
+  border: 2px solid var(--hw-border);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 0.42rem 0.75rem;
+  min-height: 36px;
+  box-shadow: var(--hw-shadow-hard-sm);
+  cursor: pointer;
+  outline: none;
+}
+.hw-select:focus {
+  border-color: var(--hw-orange);
+}
+
+/* Tactile Inset Wells */
+.hw-well {
+  background-color: var(--hw-bg-inset);
+  border: 2px solid var(--hw-border);
+  border-radius: 3px;
+  box-shadow: var(--hw-shadow-inset-sm);
+}
+
+/* ==========================================================================
+   PHYSICAL LED STATUS LIGHTS
+   ========================================================================== */
+.hw-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  display: inline-block;
+  background-color: #4b5563;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.hw-led.active, .hw-led-green.active {
+  background-color: var(--hw-green-glow);
+  box-shadow: 0 0 8px var(--hw-green-glow), inset -1px -1px 2px rgba(255, 255, 255, 0.6);
+}
+
+.hw-led-amber.active {
+  background-color: var(--hw-amber);
+  box-shadow: 0 0 8px var(--hw-amber), inset -1px -1px 2px rgba(255, 255, 255, 0.6);
+}
+
+.hw-led-orange.active {
+  background-color: var(--hw-orange);
+  box-shadow: 0 0 8px var(--hw-orange), inset -1px -1px 2px rgba(255, 255, 255, 0.6);
+}
+
+/* ==========================================================================
+   ANALOG VU SEGMENT PROGRESS METER (TAPE RECORDER STYLE)
+   ========================================================================== */
+.vu-meter {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background-color: var(--hw-bg-inset);
+  padding: 3px 5px;
+  border: 2px solid var(--hw-border);
+  border-radius: 2px;
+  box-shadow: var(--hw-shadow-inset-sm);
+}
+
+.vu-segment {
+  width: 5px;
+  height: 12px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 1px;
+}
+
+.vu-segment.lit-green {
+  background-color: var(--hw-green-glow);
+  box-shadow: 0 0 4px var(--hw-green-glow);
+}
+
+.vu-segment.lit-amber {
+  background-color: var(--hw-amber);
+  box-shadow: 0 0 4px var(--hw-amber);
+}
+
+.vu-segment.lit-red {
+  background-color: var(--hw-red-led);
+  box-shadow: 0 0 4px var(--hw-red-led);
+}
+
+/* ==========================================================================
+   ANALOG STEPPED SLIDERS
+   ========================================================================== */
+input[type="range"].hw-range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--hw-bg-inset);
+  border: 2px solid var(--hw-border);
+  height: 8px;
+  border-radius: 2px;
+  outline: none;
+  box-shadow: var(--hw-shadow-inset-sm);
+}
+
+input[type="range"].hw-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 22px;
+  background: var(--hw-bg-panel);
+  border: 2px solid var(--hw-border);
+  border-radius: 2px;
+  cursor: ew-resize;
+  box-shadow: 2px 2px 0px rgba(0,0,0,0.4);
+}
+
+input[type="range"].hw-range::-webkit-slider-thumb:hover {
+  background: var(--hw-orange);
+}
+
+/* ==========================================================================
+   CATHODE READING SURFACE & CHASSIS BEZEL
+   ========================================================================== */
+.crt-chassis {
+  background-color: var(--hw-bg-panel);
+  border: 3px solid var(--hw-border);
+  border-radius: 4px;
+  padding: 1rem;
+  box-shadow: var(--hw-shadow-hard);
+  position: relative;
+}
+
+.crt-bezel {
+  border: 2px solid var(--hw-border);
+  background-color: var(--hw-bg-inset);
+  padding: 1rem;
+  border-radius: 3px;
+  box-shadow: var(--hw-shadow-inset);
+}
+
+/* Optional Scanline Overlay (ADHD Anti-Glare) */
+.crt-scanlines-active #main-content-scroll::after {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.12) 50%);
+  background-size: 100% 4px;
+  z-index: 35;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* PDF Page Canvas Wrapper */
+.pdf-page-wrapper {
+  position: relative;
+  margin: 0 auto 24px auto;
+  border: 2px solid var(--hw-border);
+  box-shadow: var(--hw-shadow-hard);
+  background: #ffffff;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.text-layer {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  overflow: hidden;
+  opacity: 0.25;
+  line-height: 1.0;
+  transform-origin: 0 0;
+  user-select: text;
+}
+.text-layer span {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+.text-layer span::selection {
+  background: var(--hw-orange);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   BIONIC READING & FIXATION BOLDING
+   ========================================================================== */
+.bionic-word {
+  display: inline-block;
+  white-space: pre-wrap;
+  margin-right: 0.28em;
+}
+.bionic-fixation {
+  font-weight: 800;
+  color: var(--hw-text-primary);
+}
+.bionic-tail {
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+/* ==========================================================================
+   READING RULER & FOCUS MASK
+   ========================================================================== */
+#reading-ruler-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  display: none;
+}
+#reading-ruler-overlay.active {
+  display: block;
+}
+
+.ruler-mask-top, .ruler-mask-bottom {
+  position: absolute;
+  left: 0; right: 0;
+  background-color: var(--ruler-overlay);
+  backdrop-filter: blur(1.2px);
+  transition: top 0.03s ease-out, height 0.03s ease-out;
+}
+
+.ruler-focus-window {
+  position: absolute;
+  left: 0; right: 0;
+  border-top: 2px solid var(--ruler-color);
+  border-bottom: 2px solid var(--ruler-color);
+  background: rgba(235, 94, 40, 0.07);
+  box-shadow: 0 0 15px rgba(235, 94, 40, 0.15);
+  pointer-events: none;
+  transition: top 0.03s ease-out;
+}
+
+.ruler-single-bar {
+  position: absolute;
+  left: 0; right: 0;
+  height: 3px;
+  background: var(--hw-orange);
+  box-shadow: 0 0 8px var(--hw-orange);
+  pointer-events: none;
+  transition: top 0.03s ease-out;
+}
+
+/* Attention Drift Pulse */
+@keyframes hwAttentionPulse {
+  0% { box-shadow: 0 0 0 0 rgba(235, 94, 40, 0.8); }
+  50% { box-shadow: 0 0 25px 8px rgba(235, 94, 40, 0.5); }
+  100% { box-shadow: 0 0 0 0 rgba(235, 94, 40, 0); }
+}
+
+.attention-pulse-glow .ruler-focus-window {
+  animation: hwAttentionPulse 1.6s ease-in-out infinite;
+  border-color: var(--hw-orange) !important;
+}
+
+/* ==========================================================================
+   ACTIVE TTS HIGHLIGHTING
+   ========================================================================== */
+.tts-active-sentence {
+  background-color: var(--tts-sentence-highlight) !important;
+  border-left: 3px solid var(--hw-orange);
+}
+
+.tts-active-word {
+  background-color: var(--tts-word-highlight) !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+  border: 1px solid #000000;
+  padding: 0 2px;
+  display: inline-block;
+}
+
+/* ==========================================================================
+   INDEX-CARD FILING TRAY WORKSPACE (SIDE PANEL)
+   ========================================================================== */
+.index-card-header {
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px 0 8px;
+  background-color: var(--hw-bg-inset);
+  border-bottom: 2px solid var(--hw-border);
+}
+
+.index-tab {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.4rem 0.75rem;
+  border: 2px solid var(--hw-border);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  background-color: var(--hw-bg-inset);
+  color: var(--hw-text-secondary);
+  cursor: pointer;
+  margin-bottom: -2px;
+  transition: all 0.08s ease;
+}
+
+.index-tab.active {
+  background-color: var(--hw-bg-panel);
+  color: var(--hw-text-primary);
+  border-top: 3px solid var(--hw-orange);
+  margin-bottom: 0px;
+}
+
+.index-tab:hover:not(.active) {
+  background-color: var(--hw-bg-base);
+}
+
+/* ==========================================================================
+   MARGIN SCAFFOLDING GAUGE PILLS
+   ========================================================================== */
+.margin-scaffold-gutter {
+  position: absolute;
+  left: -140px;
+  top: 0; bottom: 0;
+  width: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-top: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .margin-scaffold-gutter {
+    display: none;
+  }
+}
+
+.margin-scaffold-pill {
+  padding: 0.35rem 0.6rem;
+  border-radius: 2px;
+  background-color: var(--hw-bg-panel);
+  border: 2px solid var(--hw-border);
+  color: var(--hw-text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px var(--hw-border);
+  transition: transform 0.05s ease, box-shadow 0.05s ease;
+}
+
+.margin-scaffold-pill:hover {
+  background-color: var(--hw-orange);
+  color: #ffffff;
+  border-color: #000000;
+}
+
+.margin-scaffold-pill:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px var(--hw-border);
+}
+
+/* ==========================================================================
+   MINIMALIST DEEP WORK MODE
+   ========================================================================== */
+body.deep-work-active header,
+body.deep-work-active .secondary-toolbar-container,
+body.deep-work-active #dual-workspace-wrapper {
+  display: none !important;
+}
+
+body.deep-work-active #main-content-scroll {
+  padding-top: 2rem;
+  padding-bottom: 5rem;
+}
+
+body.deep-work-active #floating-tts-bar {
+  max-width: 640px;
+  margin: 0 auto 12px auto;
+  border: 2px solid var(--hw-border);
+  box-shadow: var(--hw-shadow-hard);
+}
+
+/* ==========================================================================
+   SENSORY FIDGET TOOLS & POCKET SYNTH KEYS
+   ========================================================================== */
+.synth-key {
+  border: 2px solid var(--hw-border);
+  box-shadow: 0 4px 0 var(--hw-border), 0 6px 8px rgba(0,0,0,0.25);
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
+  cursor: pointer;
+}
+.synth-key:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 var(--hw-border);
+}
+
+.bubble-pop-cell {
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  border: 2px solid var(--hw-border);
+  cursor: pointer;
+  box-shadow: inset 1px 1px 2px rgba(255,255,255,0.4), inset -1px -1px 2px rgba(0,0,0,0.3), 2px 2px 0px var(--hw-border);
+  transition: all 0.06s ease;
+}
+.bubble-pop-cell.popped {
+  transform: translate(2px, 2px);
+  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.6);
+  opacity: 0.6;
+}
+
+/* Subtle Dopamine Glow */
+@keyframes subtleHwGlow {
+  0% { outline: 3px solid var(--hw-green-glow); }
+  50% { outline: 3px solid rgba(34, 197, 94, 0.4); }
+  100% { outline: 3px solid transparent; }
+}
+.subtle-dopamine-glow {
+  animation: subtleHwGlow 1.4s ease-out;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--hw-bg-inset);
+  border-left: 2px solid var(--hw-border);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--hw-bg-panel);
+  border: 2px solid var(--hw-border);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--hw-orange);
+}
+
+/* ==========================================================================
+   AI STUDY ASSISTANT & COPILOT SIDEBAR
+   ========================================================================== */
+#ai-assistant-sidebar {
+  width: 380px;
+  max-width: 100vw;
+  background-color: var(--hw-bg-panel);
+  border-left: 2px solid var(--hw-border);
+  box-shadow: var(--hw-shadow-hard);
+  z-index: 25;
+  transition: transform 0.2s ease, width 0.2s ease;
+}
+
+@media (max-width: 768px) {
+  #ai-assistant-sidebar {
+    position: fixed;
+    top: 52px;
+    bottom: 0;
+    right: 0;
+    width: 92vw;
+    z-index: 50;
+    box-shadow: -4px 0 15px rgba(0,0,0,0.5);
+  }
+}
+
+.ai-nav-tab {
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  transition: all 0.08s ease;
+}
+
+.ai-prompt-chip {
+  background-color: var(--hw-bg-panel);
+  border: 1px solid var(--hw-border);
+  border-radius: 2px;
+  color: var(--hw-text-secondary);
+  box-shadow: 1px 1px 0px var(--hw-border);
+  transition: all 0.08s ease;
+}
+.ai-prompt-chip:hover {
+  background-color: var(--hw-orange);
+  color: #ffffff;
+  border-color: #000000;
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0px var(--hw-border);
+}
+
+#ai-active-flashcard {
+  perspective: 1000px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+#ai-active-flashcard:hover {
+  border-color: var(--hw-orange);
+  box-shadow: 4px 4px 0px var(--hw-border);
+}
+
+.ai-quiz-opt {
+  transition: all 0.08s ease;
+  border: 2px solid var(--hw-border);
+  box-shadow: var(--hw-shadow-hard-sm);
+  border-radius: 2px;
+}
+.ai-quiz-opt:hover:not(:disabled) {
+  background-color: var(--hw-bg-inset);
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px var(--hw-border);
+}
+
+.deepdive-topic-btn {
+  border-radius: 2px;
+  text-align: left;
+  line-height: 1.25;
+  transition: all 0.08s ease;
+}
+.deepdive-topic-btn:hover {
+  background-color: var(--hw-orange);
+  color: #ffffff;
+}
+
