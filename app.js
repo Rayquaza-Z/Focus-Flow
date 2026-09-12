@@ -1,13 +1,10 @@
 /**
- * Main Application Orchestrator for ADHD PDF Reader (FocusFlow)
- * Integrates all modules into a fluid, accessible, neurodiversity-optimized experience
- * with Active Recall, Time-Awareness, and Anti-Distraction Guardrails.
+ * FocusFlow app orchestrator — static, browser-only PDF reader.
  */
 
 import { StorageManager } from './modules/storage.js';
 import { AudioSynthesizer } from './modules/audio-synthesizer.js';
 import { TTSEngine } from './modules/tts-engine.js';
-import { BionicEngine } from './modules/bionic-engine.js';
 import { SensoryDock } from './modules/sensory-dock.js';
 import { FocusTimer } from './modules/focus-timer.js';
 import { ChunkingMode } from './modules/chunking-mode.js';
@@ -17,7 +14,29 @@ import { PDFViewer } from './modules/pdf-viewer.js';
 import { ActiveRecallEngine } from './modules/active-recall.js';
 import { TimeAwarenessEngine } from './modules/time-awareness.js';
 import { AntiDistractionGuardrails } from './modules/anti-distraction.js';
-import { AIAssistant } from './modules/ai-assistant.js';
+
+const SOUND_IDS = ['brown', 'pink', 'binaural40', 'binaural10', 'rain'];
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+function on(el, event, handler) {
+  if (el) el.addEventListener(event, handler);
+}
+
+function refreshIcons() {
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function readPdfFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(new Uint8Array(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(file);
+  });
+}
 
 class App {
   constructor() {
@@ -25,11 +44,9 @@ class App {
     this.audio = new AudioSynthesizer();
     this.tts = new TTSEngine();
     this.gamification = new GamificationSystem({ audioSynthesizer: this.audio });
-
-    this.viewerMode = 'standard'; // 'standard', 'chunking'
-    this.dualWorkspaceOpen = true;
-    this.currentDocumentName = 'Sample ADHD Research Report.pdf';
-
+    this.viewerMode = 'standard';
+    this.dualWorkspaceOpen = window.innerWidth >= 1100;
+    this.currentDocumentName = '';
     this.init();
   }
 
@@ -37,82 +54,56 @@ class App {
     this.applyTheme(this.settings.theme);
     this.applyTypography();
 
-    // 1. Active Recall Engine
     this.activeRecall = new ActiveRecallEngine({
       audioSynthesizer: this.audio,
       gamification: this.gamification
     });
 
-    // 2. PDF Viewer with High-DPI Canvas & Margin Scaffolding
     this.pdfViewer = new PDFViewer({
-      container: document.getElementById('pdf-viewport'),
-      rulerOverlay: document.getElementById('reading-ruler-overlay'),
+      container: $('pdf-viewport'),
+      rulerOverlay: $('reading-ruler-overlay'),
       audioSynthesizer: this.audio,
       onPageChange: (info) => this.handlePageChange(info),
       onDocumentLoaded: (docInfo) => this.handleDocumentLoaded(docInfo)
     });
 
-    // 3. Bite-Sized Chunking Mode with Inline Micro-Quiz Gating
     this.chunkingMode = new ChunkingMode({
-      container: document.getElementById('chunking-view-container'),
+      container: $('chunking-view-container'),
       bionicEnabled: this.settings.bionicReading,
       ttsEngine: this.tts,
       audioSynthesizer: this.audio,
       activeRecall: this.activeRecall,
       onChunkComplete: (idx, total) => {
-        if (idx === total - 1) {
-          this.gamification.addXP(25, 'Chunk Section Finished');
-        }
+        if (idx === total - 1) this.gamification.addXP(25, 'Section finished');
       }
     });
 
-    // 4. Dual Focus Split-Screen Workspace
     this.dualWorkspace = new DualWorkspace({
-      container: document.getElementById('dual-workspace-container'),
+      container: $('dual-workspace-container'),
       audioSynthesizer: this.audio,
       onTaskCompleted: () => {
-        this.gamification.addXP(20, 'Task Done');
+        this.gamification.addXP(20, 'Task done');
         this.gamification.unlockBadge('task_finisher');
       }
     });
 
-    // 5. Sensory Fidget Dock
     this.sensoryDock = new SensoryDock('sensory-dock-modal-content', this.audio);
 
-    // 6. Focus Sprint & Movement Break Timer
     this.focusTimer = new FocusTimer({
       focusDuration: this.settings.focusTimerDuration || 20,
       breakDuration: this.settings.breakTimerDuration || 5,
       audioSynthesizer: this.audio,
-      onFocusComplete: (mins) => {
-        this.gamification.addXP(40, `${mins}m Focus Sprint`);
-      },
-      onBreakTriggered: (card) => {
-        this.gamification.unlockBadge('movement_hero');
-      }
+      onFocusComplete: (mins) => this.gamification.addXP(40, `${mins}m focus`),
+      onBreakTriggered: () => this.gamification.unlockBadge('movement_hero')
     });
 
-    // 7. Time Awareness & ADHD Reading Pace Engine
     this.timeAwareness = new TimeAwarenessEngine({
       audioSynthesizer: this.audio,
-      focusTimer: this.focusTimer,
-      onBreakPrompt: () => {
-        // Handled by UI toast
-      }
+      focusTimer: this.focusTimer
     });
 
-    // 8. Anti-Distraction & Anti-Play Guardrails (90s Fidget limit, 45s drift pulse, Deep Work)
     this.antiDistraction = new AntiDistractionGuardrails({
       audioSynthesizer: this.audio,
-      gamification: this.gamification,
-      pdfViewer: this.pdfViewer
-    });
-
-    // 9. FocusFlow AI Study Assistant & Copilot
-    this.aiAssistant = new AIAssistant({
-      container: document.getElementById('ai-assistant-container'),
-      sidebarWrapper: document.getElementById('ai-assistant-sidebar'),
-      audio: this.audio,
       gamification: this.gamification,
       pdfViewer: this.pdfViewer
     });
@@ -121,21 +112,17 @@ class App {
     this.setupUIEventListeners();
     this.setupAudioSoundscapeSliders();
     this.setupFrictionlessBreakPrompt();
+    this.setDualWorkspace(this.dualWorkspaceOpen);
     this.loadInitialDocument();
+    refreshIcons();
   }
 
   applyTheme(theme) {
     this.settings.theme = theme;
     document.body.setAttribute('data-theme', theme);
     StorageManager.updateSetting('theme', theme);
-
-    // Update active state in theme selector
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-      if (btn.dataset.theme === theme) {
-        btn.classList.add('ring-2', 'ring-[var(--accent-color)]');
-      } else {
-        btn.classList.remove('ring-2', 'ring-[var(--accent-color)]');
-      }
+    document.querySelectorAll('.theme-btn').forEach((btn) => {
+      btn.classList.toggle('is-active', btn.dataset.theme === theme);
     });
   }
 
@@ -144,11 +131,8 @@ class App {
     root.style.setProperty('--user-font-size', `${this.settings.fontSize}px`);
     root.style.setProperty('--user-line-height', `${this.settings.lineHeight}`);
     root.style.setProperty('--user-letter-spacing', `${this.settings.letterSpacing}px`);
-
-    const fontClasses = ['font-lexend', 'font-atkinson', 'font-opendyslexic', 'font-inter'];
-    document.body.classList.remove(...fontClasses);
+    document.body.classList.remove('font-lexend', 'font-atkinson', 'font-opendyslexic', 'font-inter');
     document.body.classList.add(`font-${this.settings.fontFamily}`);
-
     StorageManager.saveSettings(this.settings);
   }
 
@@ -157,7 +141,6 @@ class App {
     if (this.audio) this.audio.playRewardChime();
 
     if (preset === 'inattentive') {
-      // Bionic reading, Lexend/OpenDyslexic font, Reading Ruler mask on, warm cream
       this.settings.bionicReading = true;
       this.settings.readingRuler = true;
       this.settings.rulerMode = 'mask';
@@ -166,20 +149,18 @@ class App {
       this.settings.fontSize = 20;
       this.settings.lineHeight = 1.9;
       this.gamification.unlockBadge('bionic_reader');
-      this.gamification.showMiniToast('🧠 Inattentive ADHD Preset applied: Bionic + Ruler + OpenDyslexic');
+      this.gamification.showMiniToast('Focus preset: bionic words, ruler, OpenDyslexic');
     } else if (preset === 'hyperactive') {
-      // Brown noise audio on, sensory dock open, 15m focus timer, Forest calm theme
       this.settings.theme = 'forest-calm';
       this.settings.fontFamily = 'lexend';
       this.settings.soundVolumes.brown = 0.55;
       this.audio.startSound('brown', 0.55);
-      const brownSlider = document.getElementById('sound-slider-brown');
+      const brownSlider = $('sound-slider-brown');
       if (brownSlider) brownSlider.value = 55;
       this.openSensoryDockWithCooldown();
       this.gamification.unlockBadge('zen_master');
-      this.gamification.showMiniToast('⚡ Hyperactive Preset applied: Deep Brown Noise + Fidget Dock');
+      this.gamification.showMiniToast('Energy preset: brown noise and fidget tools');
     } else if (preset === 'combined') {
-      // Dual split screen workspace, Bite-Sized chunking mode, 40Hz focus binaural beat
       this.settings.theme = 'dark-velvet';
       this.settings.fontFamily = 'atkinson';
       this.settings.bionicReading = true;
@@ -187,9 +168,9 @@ class App {
       this.setDualWorkspace(true);
       this.settings.soundVolumes.binaural40 = 0.4;
       this.audio.startSound('binaural40', 0.4);
-      const binSlider = document.getElementById('sound-slider-binaural40');
+      const binSlider = $('sound-slider-binaural40');
       if (binSlider) binSlider.value = 40;
-      this.gamification.showMiniToast('🔀 Combined Preset applied: Dual Split + Chunking + 40Hz Beat');
+      this.gamification.showMiniToast('Split preset: chunks, notes, and 40 Hz tone');
     }
 
     this.applyTheme(this.settings.theme);
@@ -201,172 +182,140 @@ class App {
   }
 
   syncControlsWithSettings() {
-    const bionicToggle = document.getElementById('bionic-toggle-btn');
-    if (bionicToggle) {
-      bionicToggle.classList.toggle('active-toggle', this.settings.bionicReading);
-    }
-    const rulerToggle = document.getElementById('ruler-toggle-btn');
-    if (rulerToggle) {
-      rulerToggle.classList.toggle('active-toggle', this.settings.readingRuler);
-    }
-    const fontSelect = document.getElementById('font-select');
+    $('bionic-toggle-btn')?.classList.toggle('active-toggle', this.settings.bionicReading);
+    $('ruler-toggle-btn')?.classList.toggle('active-toggle', this.settings.readingRuler);
+    const fontSelect = $('font-select');
     if (fontSelect) fontSelect.value = this.settings.fontFamily;
-    const fontSizeSlider = document.getElementById('font-size-slider');
+    const fontSizeSlider = $('font-size-slider');
     if (fontSizeSlider) fontSizeSlider.value = this.settings.fontSize;
   }
 
   setViewerMode(mode) {
     this.viewerMode = mode;
-    const standardView = document.getElementById('pdf-viewport');
-    const chunkingView = document.getElementById('chunking-view-container');
-    const standardTab = document.getElementById('mode-btn-standard');
-    const chunkingTab = document.getElementById('mode-btn-chunking');
+    const standardView = $('pdf-viewport');
+    const chunkingView = $('chunking-view-container');
+    const standardTab = $('mode-btn-standard');
+    const chunkingTab = $('mode-btn-chunking');
 
     if (mode === 'chunking') {
-      if (standardView) standardView.classList.add('hidden');
-      if (chunkingView) chunkingView.classList.remove('hidden');
-      if (chunkingTab) chunkingTab.classList.add('bg-[var(--accent-color)]', 'text-white');
-      if (standardTab) standardTab.classList.remove('bg-[var(--accent-color)]', 'text-white');
+      standardView?.classList.add('hidden');
+      chunkingView?.classList.remove('hidden');
+      chunkingTab?.classList.add('hw-btn-orange');
+      standardTab?.classList.remove('hw-btn-orange');
       this.chunkingMode.setChunksFromPageText(this.pdfViewer.currentPage, this.pdfViewer.getCurrentPageText());
     } else {
-      if (standardView) standardView.classList.remove('hidden');
-      if (chunkingView) chunkingView.classList.add('hidden');
-      if (standardTab) standardTab.classList.add('bg-[var(--accent-color)]', 'text-white');
-      if (chunkingTab) chunkingTab.classList.remove('bg-[var(--accent-color)]', 'text-white');
-      this.pdfViewer.renderPage(this.pdfViewer.currentPage);
+      standardView?.classList.remove('hidden');
+      chunkingView?.classList.add('hidden');
+      standardTab?.classList.add('hw-btn-orange');
+      chunkingTab?.classList.remove('hw-btn-orange');
+      if (this.pdfViewer.pdfDoc) this.pdfViewer.renderPage(this.pdfViewer.currentPage);
     }
   }
 
   setDualWorkspace(open) {
     this.dualWorkspaceOpen = open;
-    const wsContainer = document.getElementById('dual-workspace-wrapper');
-    const toggleBtn = document.getElementById('toggle-workspace-btn');
-
-    if (open) {
-      if (wsContainer) wsContainer.classList.remove('hidden');
-      if (toggleBtn) toggleBtn.classList.add('bg-[var(--accent-light)]', 'text-[var(--accent-color)]');
-    } else {
-      if (wsContainer) wsContainer.classList.add('hidden');
-      if (toggleBtn) toggleBtn.classList.remove('bg-[var(--accent-light)]', 'text-[var(--accent-color)]');
-    }
+    $('dual-workspace-wrapper')?.classList.toggle('hidden', !open);
+    $('toggle-workspace-btn')?.classList.toggle('active-toggle', open);
   }
 
   handlePageChange({ pageNumber, totalPages, pageText }) {
-    const pageDisplay = document.getElementById('current-page-indicator');
-    const totalDisplay = document.getElementById('total-pages-indicator');
+    const pageDisplay = $('current-page-indicator');
+    const totalDisplay = $('total-pages-indicator');
     if (pageDisplay) pageDisplay.textContent = pageNumber;
     if (totalDisplay) totalDisplay.textContent = totalPages;
 
     this.dualWorkspace.setPageContent(pageNumber, pageText);
-
     if (this.viewerMode === 'chunking') {
       this.chunkingMode.setChunksFromPageText(pageNumber, pageText);
     }
-
     this.tts.setText(pageText);
     this.gamification.recordPageRead();
-
-    // Update ADHD reading time calculation
     const words = pageText ? pageText.trim().split(/\s+/).length : 0;
     this.timeAwareness.updatePageWords(words);
   }
 
   handleDocumentLoaded({ name, totalPages, firstPageText }) {
     this.currentDocumentName = name;
-    const titleEl = document.getElementById('document-title-display');
-    if (titleEl) titleEl.textContent = name;
-
+    const titleEl = $('document-title-display');
+    if (titleEl) {
+      titleEl.textContent = name;
+      titleEl.title = name;
+    }
     this.dualWorkspace.setDocument(name);
     this.dualWorkspace.setPageContent(1, firstPageText);
     this.gamification.unlockBadge('first_read');
-    this.gamification.showMiniToast(`📄 Loaded "${name}" (${totalPages} pages)`);
-
+    this.gamification.showMiniToast(`Opened “${name}” (${totalPages} pages)`);
     const firstWords = firstPageText ? firstPageText.trim().split(/\s+/).length : 0;
     this.timeAwareness.setDocumentStats(firstWords * totalPages, firstWords);
   }
 
+  async openPdfFile(file) {
+    if (!file) return;
+    const bytes = await readPdfFile(file);
+    this.pdfViewer.loadDocument(bytes, file.name);
+  }
+
   setupTTSHandlers() {
     this.tts.onStateChange = ({ isPlaying, isPaused, currentChunkIndex, totalChunks }) => {
-      const playIcon = document.getElementById('tts-play-icon');
-      const textStatus = document.getElementById('tts-status-text');
-
+      const playIcon = $('tts-play-icon');
+      const textStatus = $('tts-status-text');
       if (playIcon) {
         playIcon.setAttribute('data-lucide', isPlaying && !isPaused ? 'pause' : 'play');
-        if (window.lucide) window.lucide.createIcons();
+        refreshIcons();
       }
-
       if (textStatus) {
         textStatus.textContent = isPlaying
           ? `${isPaused ? 'Paused' : 'Playing'} (${currentChunkIndex + 1}/${totalChunks})`
           : 'Ready';
       }
-
-      if (isPlaying) {
-        this.gamification.unlockBadge('tts_explorer');
-      }
+      if (isPlaying) this.gamification.unlockBadge('tts_explorer');
     };
 
-    this.tts.onWordBoundary = ({ word, wordIndex, chunkIndex }) => {
-      const wordBadge = document.getElementById('tts-current-word');
-      if (wordBadge) {
-        wordBadge.textContent = word;
-      }
+    this.tts.onWordBoundary = ({ word }) => {
+      const wordBadge = $('tts-current-word');
+      if (wordBadge) wordBadge.textContent = word;
     };
   }
 
   setupAudioSoundscapeSliders() {
-    ['brown', 'pink', 'binaural40', 'binaural10', 'rain'].forEach(soundId => {
-      const slider = document.getElementById(`sound-slider-${soundId}`);
-      if (slider) {
-        slider.addEventListener('input', (e) => {
-          const val = parseFloat(e.target.value) / 100;
-          this.settings.soundVolumes[soundId] = val;
-          if (val > 0) {
-            this.audio.startSound(soundId, val);
-            this.gamification.unlockBadge('zen_master');
-          } else {
-            this.audio.stopSound(soundId);
-          }
-          StorageManager.saveSettings(this.settings);
-        });
-      }
-    });
-
-    const stopAllBtn = document.getElementById('stop-all-sounds-btn');
-    if (stopAllBtn) {
-      stopAllBtn.addEventListener('click', () => {
-        this.audio.stopAll();
-        ['brown', 'pink', 'binaural40', 'binaural10', 'rain'].forEach(id => {
-          const s = document.getElementById(`sound-slider-${id}`);
-          if (s) s.value = 0;
-          this.settings.soundVolumes[id] = 0;
-        });
+    SOUND_IDS.forEach((soundId) => {
+      on($(`sound-slider-${soundId}`), 'input', (e) => {
+        const val = parseFloat(e.target.value) / 100;
+        this.settings.soundVolumes[soundId] = val;
+        if (val > 0) {
+          this.audio.startSound(soundId, val);
+          this.gamification.unlockBadge('zen_master');
+        } else {
+          this.audio.stopSound(soundId);
+        }
         StorageManager.saveSettings(this.settings);
       });
-    }
+    });
+
+    on($('stop-all-sounds-btn'), 'click', () => {
+      this.audio.stopAll();
+      SOUND_IDS.forEach((id) => {
+        const slider = $(`sound-slider-${id}`);
+        if (slider) slider.value = 0;
+        this.settings.soundVolumes[id] = 0;
+      });
+      StorageManager.saveSettings(this.settings);
+    });
   }
 
   setupFrictionlessBreakPrompt() {
-    const startBtn = document.getElementById('break-prompt-start-btn');
-    const snoozeBtn = document.getElementById('break-prompt-snooze-btn');
-
-    if (startBtn) {
-      startBtn.addEventListener('click', () => {
-        this.timeAwareness.dismissBreakPrompt(0);
-        this.focusTimer.showRandomBreakCard();
-      });
-    }
-
-    if (snoozeBtn) {
-      snoozeBtn.addEventListener('click', () => {
-        this.timeAwareness.dismissBreakPrompt(5);
-        this.gamification.showMiniToast('⏰ Movement break snoozed for 5 minutes');
-      });
-    }
+    on($('break-prompt-start-btn'), 'click', () => {
+      this.timeAwareness.dismissBreakPrompt(0);
+      this.focusTimer.showRandomBreakCard();
+    });
+    on($('break-prompt-snooze-btn'), 'click', () => {
+      this.timeAwareness.dismissBreakPrompt(5);
+      this.gamification.showMiniToast('Break snoozed for 5 minutes');
+    });
   }
 
   openSensoryDockWithCooldown() {
-    const modalContent = document.getElementById('sensory-dock-modal-content');
+    const modalContent = $('sensory-dock-modal-content');
     this.sensoryDock.renderDockUI();
     this.openModal('sensory-dock-modal');
     this.antiDistraction.startFidgetSession(modalContent, () => {
@@ -375,187 +324,120 @@ class App {
   }
 
   setupUIEventListeners() {
-    // Theme buttons
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-      btn.addEventListener('click', () => this.applyTheme(btn.dataset.theme));
+    document.querySelectorAll('.theme-btn').forEach((btn) => {
+      on(btn, 'click', () => this.applyTheme(btn.dataset.theme));
     });
 
-    // ADHD Preset buttons
-    ['inattentive', 'hyperactive', 'combined'].forEach(preset => {
-      const btn = document.getElementById(`preset-btn-${preset}`);
-      if (btn) {
-        btn.addEventListener('click', () => this.applyADHDPreset(preset));
-      }
+    ['inattentive', 'hyperactive', 'combined'].forEach((preset) => {
+      on($(`preset-btn-${preset}`), 'click', () => this.applyADHDPreset(preset));
     });
 
-    // Minimalist Deep Work Mode Button
-    const deepWorkBtn = document.getElementById('deep-work-toggle-btn');
-    if (deepWorkBtn) {
-      deepWorkBtn.addEventListener('click', () => this.antiDistraction.toggleDeepWorkMode());
-    }
+    on($('deep-work-toggle-btn'), 'click', () => this.antiDistraction.toggleDeepWorkMode());
+    on($('scanlines-toggle-btn'), 'click', () => {
+      document.body.classList.toggle('crt-scanlines-active');
+      const isActive = document.body.classList.contains('crt-scanlines-active');
+      $('scanlines-toggle-btn').classList.toggle('active', isActive);
+      if (this.audio) this.audio.playTactileClick(680, 'square', 0.04);
+    });
 
-    // CRT Anti-Glare Scanlines Toggle
-    const scanlineBtn = document.getElementById('scanlines-toggle-btn');
-    if (scanlineBtn) {
-      scanlineBtn.addEventListener('click', () => {
-        document.body.classList.toggle('crt-scanlines-active');
-        const isActive = document.body.classList.contains('crt-scanlines-active');
-        scanlineBtn.classList.toggle('active', isActive);
-        if (this.audio) this.audio.playTactileClick(680, 'square', 0.04);
-        if (this.gamification) this.gamification.showMiniToast(isActive ? '📺 CRT Scanlines Mode Active' : '📺 Scanlines Disabled');
-      });
-    }
+    on($('prev-page-btn'), 'click', () => this.pdfViewer.prevPage());
+    on($('next-page-btn'), 'click', () => this.pdfViewer.nextPage());
+    on($('zoom-in-btn'), 'click', () => this.pdfViewer.zoomIn());
+    on($('zoom-out-btn'), 'click', () => this.pdfViewer.zoomOut());
 
-    // Page navigation
-    const prevPageBtn = document.getElementById('prev-page-btn');
-    const nextPageBtn = document.getElementById('next-page-btn');
-    if (prevPageBtn) prevPageBtn.addEventListener('click', () => this.pdfViewer.prevPage());
-    if (nextPageBtn) nextPageBtn.addEventListener('click', () => this.pdfViewer.nextPage());
+    const bionicToggle = $('bionic-toggle-btn');
+    on(bionicToggle, 'click', () => {
+      this.settings.bionicReading = !this.settings.bionicReading;
+      StorageManager.updateSetting('bionicReading', this.settings.bionicReading);
+      this.pdfViewer.setBionicMode(this.settings.bionicReading, this.settings.bionicFixation);
+      this.chunkingMode.setBionic(this.settings.bionicReading);
+      this.syncControlsWithSettings();
+      if (this.settings.bionicReading) this.gamification.unlockBadge('bionic_reader');
+    });
 
-    // Zoom controls
-    const zoomInBtn = document.getElementById('zoom-in-btn');
-    const zoomOutBtn = document.getElementById('zoom-out-btn');
-    if (zoomInBtn) zoomInBtn.addEventListener('click', () => this.pdfViewer.zoomIn());
-    if (zoomOutBtn) zoomOutBtn.addEventListener('click', () => this.pdfViewer.zoomOut());
+    const rulerToggle = $('ruler-toggle-btn');
+    on(rulerToggle, 'click', () => {
+      this.settings.readingRuler = !this.settings.readingRuler;
+      StorageManager.updateSetting('readingRuler', this.settings.readingRuler);
+      this.pdfViewer.setReadingRuler(this.settings.readingRuler, this.settings.rulerMode, this.settings.rulerHeight);
+      this.syncControlsWithSettings();
+    });
 
-    // Bionic toggle
-    const bionicToggle = document.getElementById('bionic-toggle-btn');
-    if (bionicToggle) {
-      bionicToggle.addEventListener('click', () => {
-        this.settings.bionicReading = !this.settings.bionicReading;
-        StorageManager.updateSetting('bionicReading', this.settings.bionicReading);
-        this.pdfViewer.setBionicMode(this.settings.bionicReading, this.settings.bionicFixation);
-        this.chunkingMode.setBionic(this.settings.bionicReading);
-        this.syncControlsWithSettings();
-        if (this.settings.bionicReading) {
-          this.gamification.unlockBadge('bionic_reader');
-        }
-      });
-    }
+    on($('ruler-mode-select'), 'change', (e) => {
+      this.settings.rulerMode = e.target.value;
+      StorageManager.updateSetting('rulerMode', this.settings.rulerMode);
+      this.pdfViewer.setReadingRuler(this.settings.readingRuler, this.settings.rulerMode, this.settings.rulerHeight);
+    });
 
-    // Reading Ruler toggle
-    const rulerToggle = document.getElementById('ruler-toggle-btn');
-    if (rulerToggle) {
-      rulerToggle.addEventListener('click', () => {
-        this.settings.readingRuler = !this.settings.readingRuler;
-        StorageManager.updateSetting('readingRuler', this.settings.readingRuler);
-        this.pdfViewer.setReadingRuler(this.settings.readingRuler, this.settings.rulerMode, this.settings.rulerHeight);
-        this.syncControlsWithSettings();
-      });
-    }
+    on($('font-select'), 'change', (e) => {
+      this.settings.fontFamily = e.target.value;
+      this.applyTypography();
+    });
 
-    // Ruler mode selector
-    const rulerModeSelect = document.getElementById('ruler-mode-select');
-    if (rulerModeSelect) {
-      rulerModeSelect.addEventListener('change', (e) => {
-        this.settings.rulerMode = e.target.value;
-        StorageManager.updateSetting('rulerMode', this.settings.rulerMode);
-        this.pdfViewer.setReadingRuler(this.settings.readingRuler, this.settings.rulerMode, this.settings.rulerHeight);
-      });
-    }
+    on($('font-size-slider'), 'input', (e) => {
+      this.settings.fontSize = parseInt(e.target.value, 10);
+      this.applyTypography();
+    });
 
-    // Font family selector
-    const fontSelect = document.getElementById('font-select');
-    if (fontSelect) {
-      fontSelect.addEventListener('change', (e) => {
-        this.settings.fontFamily = e.target.value;
-        this.applyTypography();
-      });
-    }
+    on($('mode-btn-standard'), 'click', () => this.setViewerMode('standard'));
+    on($('mode-btn-chunking'), 'click', () => this.setViewerMode('chunking'));
+    on($('toggle-workspace-btn'), 'click', () => this.setDualWorkspace(!this.dualWorkspaceOpen));
 
-    // Font size slider
-    const fontSizeSlider = document.getElementById('font-size-slider');
-    if (fontSizeSlider) {
-      fontSizeSlider.addEventListener('input', (e) => {
-        this.settings.fontSize = parseInt(e.target.value);
-        this.applyTypography();
-      });
-    }
+    on($('tts-main-play-btn'), 'click', () => this.tts.togglePlayPause());
+    on($('tts-next-sentence-btn'), 'click', () => this.tts.nextSentence());
+    on($('tts-prev-sentence-btn'), 'click', () => this.tts.prevSentence());
+    on($('tts-speed-select'), 'change', (e) => this.tts.setRate(parseFloat(e.target.value)));
 
-    // View modes
-    const modeStandard = document.getElementById('mode-btn-standard');
-    const modeChunking = document.getElementById('mode-btn-chunking');
-    if (modeStandard) modeStandard.addEventListener('click', () => this.setViewerMode('standard'));
-    if (modeChunking) modeChunking.addEventListener('click', () => this.setViewerMode('chunking'));
+    const fileInput = $('pdf-file-input');
+    on($('upload-pdf-btn'), 'click', () => fileInput?.click());
+    document.querySelectorAll('[data-trigger-upload]').forEach((btn) => {
+      on(btn, 'click', () => fileInput?.click());
+    });
+    on(fileInput, 'change', (e) => {
+      const file = e.target.files?.[0];
+      if (file) this.openPdfFile(file);
+    });
 
-    // Dual workspace toggle
-    const wsToggle = document.getElementById('toggle-workspace-btn');
-    if (wsToggle) {
-      wsToggle.addEventListener('click', () => this.setDualWorkspace(!this.dualWorkspaceOpen));
-    }
-
-    // TTS Controls
-    const ttsPlayBtn = document.getElementById('tts-main-play-btn');
-    const ttsNextBtn = document.getElementById('tts-next-sentence-btn');
-    const ttsPrevBtn = document.getElementById('tts-prev-sentence-btn');
-    const ttsSpeedSelect = document.getElementById('tts-speed-select');
-
-    if (ttsPlayBtn) ttsPlayBtn.addEventListener('click', () => this.tts.togglePlayPause());
-    if (ttsNextBtn) ttsNextBtn.addEventListener('click', () => this.tts.nextSentence());
-    if (ttsPrevBtn) ttsPrevBtn.addEventListener('click', () => this.tts.prevSentence());
-    if (ttsSpeedSelect) {
-      ttsSpeedSelect.addEventListener('change', (e) => {
-        const rate = parseFloat(e.target.value);
-        this.tts.setRate(rate);
-      });
-    }
-
-    // File Upload / Picker
-    const fileInput = document.getElementById('pdf-file-input');
-    const uploadBtn = document.getElementById('upload-pdf-btn');
-    if (uploadBtn && fileInput) {
-      uploadBtn.addEventListener('click', () => fileInput.click());
-      fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const fileReader = new FileReader();
-          fileReader.onload = () => {
-            const typedArray = new Uint8Array(fileReader.result);
-            this.pdfViewer.loadDocument(typedArray, file.name);
-          };
-          fileReader.readAsArrayBuffer(file);
-        }
-      });
-    }
-
-    // Drag and drop support
-    window.addEventListener('dragover', (e) => e.preventDefault());
+    const overlay = $('drop-overlay');
+    window.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (overlay) overlay.hidden = false;
+    });
+    window.addEventListener('dragleave', (e) => {
+      if (e.relatedTarget === null && overlay) overlay.hidden = true;
+    });
     window.addEventListener('drop', (e) => {
       e.preventDefault();
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-        const file = e.dataTransfer.files[0];
-        if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-          const fileReader = new FileReader();
-          fileReader.onload = () => {
-            const typedArray = new Uint8Array(fileReader.result);
-            this.pdfViewer.loadDocument(typedArray, file.name);
-          };
-          fileReader.readAsArrayBuffer(file);
-        }
+      if (overlay) overlay.hidden = true;
+      const file = e.dataTransfer.files?.[0];
+      if (file && (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))) {
+        this.openPdfFile(file);
       }
     });
 
-    // Modals: Audio Soundscapes, Sensory Fidget Dock (with 90s session limiter), Badges
     this.setupModalTrigger('open-soundscape-btn', 'soundscape-modal');
-    
-    const sensoryBtn = document.getElementById('open-sensory-btn');
-    if (sensoryBtn) {
-      sensoryBtn.addEventListener('click', () => this.openSensoryDockWithCooldown());
-    }
-
-    const closeSensoryBtn = document.querySelector('#sensory-dock-modal .close-modal-btn');
-    if (closeSensoryBtn) {
-      closeSensoryBtn.addEventListener('click', () => {
-        this.antiDistraction.stopFidgetSession();
-        this.closeModal('sensory-dock-modal');
-      });
-    }
-
+    on($('open-sensory-btn'), 'click', () => this.openSensoryDockWithCooldown());
+    on(document.querySelector('#sensory-dock-modal .close-modal-btn'), 'click', () => {
+      this.antiDistraction.stopFidgetSession();
+      this.closeModal('sensory-dock-modal');
+    });
     this.setupModalTrigger('open-badges-btn', 'gamification-modal', () => this.gamification.openBadgesModal());
 
-    // Global Keyboard Shortcuts
+    document.querySelectorAll('.modal-backdrop').forEach((modal) => {
+      on(modal, 'click', (e) => {
+        if (e.target === modal) {
+          if (modal.id === 'sensory-dock-modal') this.antiDistraction.stopFidgetSession();
+          this.closeModal(modal.id);
+        }
+      });
+    });
+
     window.addEventListener('keydown', (e) => {
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-backdrop.flex').forEach((modal) => this.closeModal(modal.id));
+        return;
+      }
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
 
       if (e.key === 'ArrowRight' || e.key === 'PageDown') {
         e.preventDefault();
@@ -570,78 +452,61 @@ class App {
         this.tts.togglePlayPause();
       } else if (e.key === 'b' || e.key === 'B') {
         e.preventDefault();
-        bionicToggle.click();
+        bionicToggle?.click();
       } else if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
-        rulerToggle.click();
+        rulerToggle?.click();
       } else if (e.key === 'm' || e.key === 'M') {
         e.preventDefault();
         this.focusTimer.showRandomBreakCard();
       } else if (e.key === 'q' || e.key === 'Q') {
         e.preventDefault();
-        const activeText = this.pdfViewer.getCurrentPageText();
-        const quiz = this.activeRecall.generateMicroQuiz(activeText);
-        if (quiz) {
-          const mount = document.getElementById('inline-quiz-container') || document.getElementById('pdf-viewport');
-          if (mount) this.activeRecall.renderQuizCard(mount, quiz);
-        }
+        const quiz = this.activeRecall.generateMicroQuiz(this.pdfViewer.getCurrentPageText());
+        const mount = $('inline-quiz-container') || $('pdf-viewport');
+        if (quiz && mount) this.activeRecall.renderQuizCard(mount, quiz);
       }
     });
   }
 
   setupModalTrigger(btnId, modalId, onOpen) {
-    const btn = document.getElementById(btnId);
-    const modal = document.getElementById(modalId);
-    const closeBtn = modal ? modal.querySelector('.close-modal-btn') : null;
-
-    if (btn && modal) {
-      btn.addEventListener('click', () => {
-        if (onOpen) onOpen();
-        this.openModal(modalId);
-      });
-    }
-
-    if (closeBtn && modal) {
-      closeBtn.addEventListener('click', () => this.closeModal(modalId));
-    }
+    const modal = $(modalId);
+    on($(btnId), 'click', () => {
+      if (onOpen) onOpen();
+      this.openModal(modalId);
+    });
+    modal?.querySelectorAll('.close-modal-btn').forEach((btn) => {
+      on(btn, 'click', () => this.closeModal(modalId));
+    });
   }
 
   openModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      if (this.audio) this.audio.playTactileClick(650, 'sine');
-      if (window.lucide) window.lucide.createIcons();
-    }
+    const modal = $(modalId);
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    if (this.audio) this.audio.playTactileClick(650, 'sine');
+    refreshIcons();
   }
 
   closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
+    const modal = $(modalId);
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
   }
 
   async loadInitialDocument() {
     try {
       const response = await fetch('sample.pdf');
       if (response.ok) {
-        const arrayBuffer = await response.arrayBuffer();
-        this.pdfViewer.loadDocument(arrayBuffer, 'ADHD Research & Assistive Software Report.pdf');
-        return;
+        this.pdfViewer.loadDocument(await response.arrayBuffer(), 'sample.pdf');
       }
-    } catch (e) {
-      console.warn('Loading fallback PDF path:', e);
+    } catch {
+      /* Welcome card stays until the visitor opens a file. */
     }
-
-    const pdfFilename = 'How students and employees diagnoised with ADHD face difficulties in learning from normal pdf\'s, and other e material , .._.pdf';
-    this.pdfViewer.loadDocument(pdfFilename, 'ADHD Research & Assistive Software Report.pdf');
   }
 }
 
-// Bootstrap on DOM Ready
 window.addEventListener('DOMContentLoaded', () => {
   window.app = new App();
 });

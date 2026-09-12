@@ -56,14 +56,8 @@ def main():
     port = find_free_port(PORT)
     server_address = ("", port)
     
-    print("\n" + "=" * 65)
-    print("🧠 FocusFlow — ADHD Neurodiversity PDF Reader Server")
-    print("=" * 65)
-    print(f"🚀 Running locally at: http://localhost:{port}")
-    print(f"📂 Workspace Directory: {DIRECTORY}")
-    print("✨ Features: Bionic Reading | TTS Word Sync | Brown Noise | Fidget Dock")
-    print("💡 Press Ctrl+C to stop the server.")
-    print("=" * 65 + "\n")
+    print("\nFocusFlow is running at http://localhost:" + str(port))
+    print("Open that URL in your browser. Press Ctrl+C to stop.\n")
 
     try:
         with socketserver.TCPServer(server_address, ADHDReaderHTTPRequestHandler) as httpd:

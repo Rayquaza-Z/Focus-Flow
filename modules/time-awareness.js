@@ -135,8 +135,7 @@ export class TimeAwarenessEngine {
 
     badge.innerHTML = `
       <i data-lucide="hourglass" class="w-3.5 h-3.5 text-indigo-500 animate-pulse"></i>
-      <span class="font-bold text-[var(--text-primary)]">~${formatted} left</span>
-      <span class="text-[10px] text-[var(--text-secondary)] hidden sm:inline">(ADHD Pace)</span>
+      <span class="font-bold">~${formatted} left</span>
     `;
 
     if (window.lucide) window.lucide.createIcons();

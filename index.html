@@ -3,468 +3,298 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FocusFlow // MK-IV — Retro-Future ADHD Study Workstation</title>
-  
-  <!-- Tailwind CSS CDN -->
+  <title>FocusFlow — ADHD-friendly PDF reader</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- PDF.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <!-- Canvas Confetti CDN -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-
-  <!-- Cassette Futurism Hardware Stylesheet -->
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body data-theme="cream" class="min-h-screen flex flex-col font-lexend antialiased select-none">
+<body data-theme="cream" class="min-h-screen flex flex-col font-lexend antialiased">
 
-  <!-- ================= TOP RACK-MOUNT DASHBOARD ================= -->
-  <header class="sticky top-0 z-30 bg-[var(--hw-bg-panel)] border-b-2 border-[var(--hw-border)] px-3 py-2 flex items-center justify-between shadow-[var(--hw-shadow-hard-sm)]">
-    
-    <!-- Logo & Hardware Chassis Name -->
-    <div class="flex items-center space-x-3">
-      <div class="flex items-center space-x-2">
-        <div class="w-8 h-8 rounded-[3px] bg-[var(--hw-bg-inset)] border-2 border-[var(--hw-border)] flex items-center justify-center text-[var(--hw-orange)] shadow-[var(--hw-shadow-inset-sm)]">
-          <i data-lucide="cpu" class="w-4 h-4"></i>
-        </div>
-        <div>
-          <div class="flex items-center space-x-1.5">
-            <span class="font-mono font-extrabold text-xs tracking-wider text-[var(--hw-text-primary)] uppercase">FOCUSFLOW // MK-IV</span>
-            <span class="hw-led hw-led-green active" title="System Online"></span>
-          </div>
-          <span class="font-mono text-[9px] block text-[var(--hw-text-muted)] font-semibold uppercase tracking-tight">NEURODIVERSITY WORKSTATION</span>
-        </div>
+  <a class="skip-link" href="#main-content-scroll">Skip to document</a>
+  <div id="drop-overlay" class="drop-overlay" hidden>
+    <p>Drop a PDF to open it</p>
+  </div>
+
+  <header class="app-header sticky top-0 z-30">
+    <div class="header-left">
+      <div class="brand-mark" aria-hidden="true">
+        <i data-lucide="book-open" class="w-4 h-4"></i>
       </div>
-
-      <!-- Recessed Document Title LCD Box -->
-      <div class="hidden lg:flex items-center space-x-2 px-2.5 py-1 bg-[var(--hw-bg-inset)] border-2 border-[var(--hw-border)] rounded-[2px] shadow-[var(--hw-shadow-inset-sm)] max-w-xs">
-        <i data-lucide="file-text" class="w-3 h-3 text-[var(--hw-orange)] flex-shrink-0"></i>
-        <span id="document-title-display" class="font-mono text-[11px] font-bold text-[var(--hw-text-primary)] truncate" title="Active File">
-          LOADING DOCUMENT...
-        </span>
+      <div class="min-w-0">
+        <h1 class="brand-title">FocusFlow</h1>
+        <p id="document-title-display" class="doc-title" title="Current file">No PDF open</p>
       </div>
     </div>
 
-    <!-- ADHD Mode Physical Switch Presets -->
-    <div class="hidden md:flex items-center bg-[var(--hw-bg-inset)] p-1.5 rounded-[3px] border-2 border-[var(--hw-border)] space-x-1.5 shadow-[var(--hw-shadow-inset-sm)]">
-      <span class="font-mono text-[10px] font-extrabold text-[var(--hw-text-secondary)] px-1.5 uppercase tracking-widest">PRESETS:</span>
-      <button id="preset-btn-inattentive" class="hw-btn text-xs font-bold" title="Bionic + Ruler + OpenDyslexic Font">
-        INATTENTIVE
-      </button>
-      <button id="preset-btn-hyperactive" class="hw-btn text-xs font-bold" title="Brown Noise + Fidget Dock + Breaks">
-        HYPERACTIVE
-      </button>
-      <button id="preset-btn-combined" class="hw-btn text-xs font-bold" title="Dual Split + Chunking + 40Hz Beat">
-        COMBINED
-      </button>
+    <div class="preset-group hidden md:flex" role="group" aria-label="Reading presets">
+      <span class="group-label">Presets</span>
+      <button id="preset-btn-inattentive" class="hw-btn hw-btn-sm" title="Larger type, bionic words, and a reading ruler">Focus</button>
+      <button id="preset-btn-hyperactive" class="hw-btn hw-btn-sm" title="Brown noise and fidget tools">Energy</button>
+      <button id="preset-btn-combined" class="hw-btn hw-btn-sm" title="Chunked pages plus notes">Split</button>
     </div>
 
-    <!-- Right Controls: AI Copilot, Deep Work, Scanlines, Timer, Sound, Upload -->
-    <div class="flex items-center space-x-2">
-      
-      <!-- AI Study Copilot Toggle Button -->
-      <button id="toggle-ai-btn" class="hw-btn hw-btn-cyan" title="Toggle AI Study Copilot (Flashcards, Quiz, Deep Dive, Chat)">
-        <i data-lucide="bot" class="w-4 h-4 text-white"></i>
-        <span class="hw-led hw-led-green active"></span>
-        <span class="font-extrabold">AI COPILOT</span>
-      </button>
-
-      <!-- Minimalist Deep Work Mode Button -->
-      <button id="deep-work-toggle-btn" class="hw-btn" title="Deep Work Focus Mode (Shift + F)">
-        <i data-lucide="maximize-2" class="w-4 h-4 text-[var(--hw-orange)]"></i>
-        <span class="hidden lg:inline">DEEP WORK</span>
-      </button>
-
-      <!-- CRT Scanlines Anti-Glare Toggle -->
-      <button id="scanlines-toggle-btn" class="hw-btn" title="Toggle CRT Anti-Glare Scanlines">
-        <i data-lucide="monitor" class="w-4 h-4 text-[var(--hw-cyan)]"></i>
-        <span class="hidden xl:inline">SCANLINES</span>
-      </button>
-
-      <!-- ADHD-Adjusted Reading Time Badge -->
-      <div id="adhd-time-estimate-badge" class="hidden sm:flex items-center space-x-1.5 bg-[var(--hw-bg-inset)] px-3 py-1.5 rounded-[2px] border-2 border-[var(--hw-border)] font-mono text-xs font-bold text-[var(--hw-text-primary)] shadow-[var(--hw-shadow-inset-sm)]" title="ADHD-adjusted reading pace">
-        <i data-lucide="hourglass" class="w-3.5 h-3.5 text-[var(--hw-amber)]"></i>
-        <span>~3M LEFT</span>
+    <div class="header-actions">
+      <div id="adhd-time-estimate-badge" class="status-chip hidden sm:flex" title="Estimated time left at a slower, ADHD-friendly pace">
+        <i data-lucide="hourglass" class="w-3.5 h-3.5"></i>
+        <span>~—</span>
       </div>
 
-      <!-- Focus Interval Sprint Timer -->
-      <div class="flex items-center space-x-1.5 bg-[var(--hw-bg-inset)] px-3 py-1.5 rounded-[2px] border-2 border-[var(--hw-border)] shadow-[var(--hw-shadow-inset-sm)]">
+      <div class="status-chip timer-chip">
         <span class="hw-led hw-led-amber active"></span>
-        <span id="focus-timer-display" class="font-mono text-xs font-extrabold text-[var(--hw-text-primary)] tracking-wider">20:00</span>
-        <button id="focus-timer-toggle-btn" class="hw-btn hw-btn-sm p-1 ml-1" title="Start/Pause Focus Timer">
-          <i data-lucide="play" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
+        <span id="focus-timer-display" class="font-mono text-xs font-extrabold tracking-wider">20:00</span>
+        <button id="focus-timer-toggle-btn" class="hw-btn hw-btn-sm p-1" title="Start or pause the focus timer">
+          <i data-lucide="play" class="w-3.5 h-3.5"></i>
         </button>
       </div>
 
-      <!-- Gamification Stats Badge (XP & Streak) -->
-      <button id="open-badges-btn" class="hw-btn" title="Achievements & XP Tally">
-        <span class="text-[var(--hw-amber)] text-sm">🔥</span>
-        <span id="header-streak-counter" class="font-mono font-extrabold">1D</span>
-        <span class="text-[var(--hw-text-muted)]">|</span>
+      <button id="deep-work-toggle-btn" class="hw-btn" title="Hide extra chrome (Shift + F)">
+        <i data-lucide="maximize-2" class="w-4 h-4"></i>
+        <span class="hidden lg:inline">Focus mode</span>
+      </button>
+
+      <button id="open-badges-btn" class="hw-btn" title="Streak and XP">
+        <span aria-hidden="true">🔥</span>
+        <span id="header-streak-counter" class="font-mono font-extrabold">1d</span>
+        <span class="text-[var(--hw-text-muted)]">·</span>
         <span id="header-xp-counter" class="font-mono font-bold">120 XP</span>
       </button>
 
-      <!-- Soundscape Audio Mixer Modal Trigger -->
-      <button id="open-soundscape-btn" class="hw-btn p-2" title="Analog Soundscape & Binaural Beats">
+      <button id="open-soundscape-btn" class="hw-btn p-2" title="Background sounds">
         <i data-lucide="headphones" class="w-4 h-4"></i>
       </button>
 
-      <!-- Sensory Fidget Dock Trigger -->
-      <button id="open-sensory-btn" class="hw-btn p-2" title="Sensory Fidget Synth Dock">
-        <i data-lucide="sparkles" class="w-4 h-4 text-[var(--hw-orange)]"></i>
+      <button id="open-sensory-btn" class="hw-btn p-2" title="Fidget tools (90 second sessions)">
+        <i data-lucide="hand" class="w-4 h-4"></i>
       </button>
 
-      <!-- Upload PDF File -->
       <input type="file" id="pdf-file-input" accept="application/pdf" class="hidden" />
-      <button id="upload-pdf-btn" class="hw-btn hw-btn-orange font-bold" title="Load PDF Document">
+      <button id="upload-pdf-btn" class="hw-btn hw-btn-orange font-bold" title="Open a PDF from your computer">
         <i data-lucide="upload" class="w-4 h-4"></i>
-        <span class="hidden sm:inline">LOAD PDF</span>
+        <span>Open PDF</span>
       </button>
     </div>
   </header>
 
-  <!-- ================= SECONDARY INSTRUMENTATION TOOLBAR ================= -->
-  <div class="secondary-toolbar-container bg-[var(--hw-bg-inset)] border-b-2 border-[var(--hw-border)] px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-xs">
-    
-    <!-- Left: Page Navigation & Zoom -->
-    <div class="flex items-center space-x-2.5">
-      <div class="flex items-center bg-[var(--hw-bg-panel)] rounded-[3px] border-2 border-[var(--hw-border)] px-2 py-1 space-x-1.5 shadow-[var(--hw-shadow-hard-sm)]">
-        <button id="prev-page-btn" class="hw-btn hw-btn-sm p-1 hover:text-[var(--hw-orange)] transition" title="Previous Page (Left Arrow)">
+  <div class="secondary-toolbar-container">
+    <div class="toolbar-cluster">
+      <div class="status-chip">
+        <button id="prev-page-btn" class="hw-btn hw-btn-sm p-1" title="Previous page">
           <i data-lucide="chevron-left" class="w-4 h-4"></i>
         </button>
-        <span class="font-mono font-extrabold text-xs text-[var(--hw-text-primary)] px-2">
-          PG <span id="current-page-indicator">01</span>/<span id="total-pages-indicator">06</span>
+        <span class="font-mono font-extrabold text-xs px-1">
+          Page <span id="current-page-indicator">1</span> / <span id="total-pages-indicator">—</span>
         </span>
-        <button id="next-page-btn" class="hw-btn hw-btn-sm p-1 hover:text-[var(--hw-orange)] transition" title="Next Page (Right Arrow)">
+        <button id="next-page-btn" class="hw-btn hw-btn-sm p-1" title="Next page">
           <i data-lucide="chevron-right" class="w-4 h-4"></i>
         </button>
       </div>
 
-      <div class="flex items-center bg-[var(--hw-bg-panel)] rounded-[3px] border-2 border-[var(--hw-border)] px-2 py-1 space-x-1.5 shadow-[var(--hw-shadow-hard-sm)]">
-        <button id="zoom-out-btn" class="hw-btn hw-btn-sm px-2 font-mono font-extrabold hover:text-[var(--hw-orange)]" title="Zoom Out">-</button>
-        <span class="font-mono text-[11px] font-bold text-[var(--hw-text-muted)]">ZOOM</span>
-        <button id="zoom-in-btn" class="hw-btn hw-btn-sm px-2 font-mono font-extrabold hover:text-[var(--hw-orange)]" title="Zoom In">+</button>
+      <div class="status-chip">
+        <button id="zoom-out-btn" class="hw-btn hw-btn-sm px-2" title="Zoom out">−</button>
+        <span class="group-label">Zoom</span>
+        <button id="zoom-in-btn" class="hw-btn hw-btn-sm px-2" title="Zoom in">+</button>
       </div>
     </div>
 
-    <!-- Center: ADHD Visual Accommodations (Bionic, Ruler, Font, Themes) -->
-    <div class="flex items-center space-x-2.5 overflow-x-auto">
-      
-      <!-- Bionic Reading Toggle -->
-      <button id="bionic-toggle-btn" class="hw-btn font-bold" title="Toggle Bionic Reading Fixation (B key)">
-        <i data-lucide="zap" class="w-4 h-4 text-[var(--hw-amber)]"></i>
-        <span>BIONIC</span>
+    <div class="toolbar-cluster overflow-x-auto">
+      <button id="bionic-toggle-btn" class="hw-btn font-bold" title="Bold word beginnings (B)">
+        <i data-lucide="zap" class="w-4 h-4"></i>
+        <span>Bionic</span>
       </button>
-
-      <!-- Reading Ruler Toggle -->
-      <button id="ruler-toggle-btn" class="hw-btn font-bold" title="Toggle Focus Ruler / Mask (R key)">
-        <i data-lucide="ruler" class="w-4 h-4 text-[var(--hw-cyan)]"></i>
-        <span>RULER</span>
+      <button id="ruler-toggle-btn" class="hw-btn font-bold" title="Highlight one line at a time (R)">
+        <i data-lucide="ruler" class="w-4 h-4"></i>
+        <span>Ruler</span>
       </button>
-
-      <!-- Ruler Style Mode -->
-      <select id="ruler-mode-select" class="hw-select">
-        <option value="mask">SPOTLIGHT MASK</option>
-        <option value="line">LASER LINE</option>
+      <select id="ruler-mode-select" class="hw-select" aria-label="Ruler style">
+        <option value="mask">Spotlight</option>
+        <option value="line">Line</option>
       </select>
-
-      <!-- ADHD Font Family Picker -->
-      <select id="font-select" class="hw-select">
-        <option value="lexend">LEXEND (ADHD FOCUS)</option>
-        <option value="opendyslexic">OPENDYSLEXIC</option>
-        <option value="atkinson">ATKINSON HYPERLEGIBLE</option>
-        <option value="inter">INTER CLEAN SANS</option>
+      <select id="font-select" class="hw-select" aria-label="Font">
+        <option value="lexend">Lexend</option>
+        <option value="opendyslexic">OpenDyslexic</option>
+        <option value="atkinson">Atkinson</option>
+        <option value="inter">Inter</option>
       </select>
-
-      <!-- Font Size Stepper -->
-      <div class="hidden sm:flex items-center space-x-2 bg-[var(--hw-bg-panel)] px-2.5 py-1 rounded-[3px] border-2 border-[var(--hw-border)] shadow-[var(--hw-shadow-hard-sm)]">
-        <span class="font-mono text-[10px] font-extrabold text-[var(--hw-text-muted)]">PT</span>
-        <input type="range" id="font-size-slider" min="14" max="28" value="18" class="hw-range w-16 cursor-pointer" />
-      </div>
-
-      <!-- Theme Color Selector Chips -->
-      <div class="flex items-center space-x-1.5 pl-2.5 border-l-2 border-[var(--hw-border)]">
-        <button class="theme-btn w-6 h-6 rounded-[2px] bg-[#eae6dc] border-2 border-[#2b2e36]" data-theme="cream" title="Lab Matte Cream"></button>
-        <button class="theme-btn w-6 h-6 rounded-[2px] bg-[#141619] border-2 border-[#4d5464]" data-theme="dark-velvet" title="Deep Slate Rack"></button>
-        <button class="theme-btn w-6 h-6 rounded-[2px] bg-[#0c1510] border-2 border-[#10b981]" data-theme="forest-calm" title="Phosphor Green CRT"></button>
-        <button class="theme-btn w-6 h-6 rounded-[2px] bg-[#141006] border-2 border-[#f59e0b]" data-theme="lavender-soft" title="Monochrome Amber CRT"></button>
-        <button class="theme-btn w-6 h-6 rounded-[2px] bg-[#000000] border-2 border-[#ffff00]" data-theme="high-contrast" title="High Contrast"></button>
+      <label class="status-chip hidden sm:flex">
+        <span class="group-label">Size</span>
+        <input type="range" id="font-size-slider" min="14" max="28" value="18" class="hw-range w-16" />
+      </label>
+      <div class="theme-row" role="group" aria-label="Color theme">
+        <button class="theme-btn" data-theme="cream" title="Cream"></button>
+        <button class="theme-btn theme-btn-dark" data-theme="dark-velvet" title="Dark"></button>
+        <button class="theme-btn theme-btn-green" data-theme="forest-calm" title="Green"></button>
+        <button class="theme-btn theme-btn-amber" data-theme="lavender-soft" title="Amber"></button>
+        <button class="theme-btn theme-btn-contrast" data-theme="high-contrast" title="High contrast"></button>
       </div>
     </div>
 
-    <!-- Right: View Modes & Dual Focus Toggle -->
-    <div class="flex items-center space-x-2">
-      <div class="flex items-center bg-[var(--hw-bg-panel)] p-1 rounded-[3px] border-2 border-[var(--hw-border)] shadow-[var(--hw-shadow-hard-sm)] space-x-1">
-        <button id="mode-btn-standard" class="hw-btn hw-btn-sm hw-btn-orange font-bold">
-          FULL DOC
-        </button>
+    <div class="toolbar-cluster">
+      <button id="scanlines-toggle-btn" class="hw-btn hw-btn-sm" title="Soft scanlines to reduce glare">
+        <i data-lucide="monitor" class="w-3.5 h-3.5"></i>
+        <span>Glare filter</span>
+      </button>
+      <div class="status-chip p-1">
+        <button id="mode-btn-standard" class="hw-btn hw-btn-sm hw-btn-orange font-bold">Full page</button>
         <button id="mode-btn-chunking" class="hw-btn hw-btn-sm font-bold">
           <i data-lucide="layers" class="w-3.5 h-3.5"></i>
-          <span>CHUNK STEP</span>
+          <span>Chunks</span>
         </button>
       </div>
-
-      <button id="toggle-workspace-btn" class="hw-btn font-bold" title="Toggle Side Index Card Tray">
-        <i data-lucide="columns-2" class="w-4 h-4 text-[var(--hw-orange)]"></i>
-        <span class="hidden md:inline">INDEX TRAY</span>
+      <button id="toggle-workspace-btn" class="hw-btn font-bold" title="Notes, tasks, and cards">
+        <i data-lucide="columns-2" class="w-4 h-4"></i>
+        <span class="hidden md:inline">Notes</span>
       </button>
     </div>
   </div>
 
-  <!-- ================= MAIN VIEWPORT & SPLIT WORKSPACE ================= -->
   <main class="flex-1 flex overflow-hidden relative">
-    
-    <!-- Reading Ruler Overlay (Spotlight or Laser) -->
     <div id="reading-ruler-overlay"></div>
 
-    <!-- Left / Center: PDF & Chunking Monitor Chamber -->
     <div id="main-content-scroll" class="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col items-center justify-start relative crt-bezel">
-      
-      <!-- Standard PDF Viewport Container -->
       <div id="pdf-viewport" class="w-full flex flex-col items-center">
-        <!-- Rendered Pages go here -->
+        <div class="welcome-card">
+          <h2>Open a PDF to start reading</h2>
+          <p>Use <strong>Open PDF</strong> or drag a file onto this page. Everything stays in your browser — nothing is uploaded to a server.</p>
+          <button type="button" class="hw-btn hw-btn-orange" data-trigger-upload>
+            Choose a PDF
+          </button>
+        </div>
       </div>
-
-      <!-- Bite-Sized Chunking Mode Container -->
-      <div id="chunking-view-container" class="w-full hidden py-4">
-        <!-- Rendered Bite-Sized Cards go here -->
-      </div>
+      <div id="chunking-view-container" class="w-full hidden py-4"></div>
     </div>
 
-    <!-- Right: Collapsible Index-Card Workspace (Notes, Tasks, Flashcards, Summary) -->
-    <aside id="dual-workspace-wrapper" class="w-80 lg:w-96 flex-shrink-0 h-full flex flex-col transition-all duration-200 border-l-2 border-[var(--hw-border)] bg-[var(--hw-bg-panel)] shadow-[var(--hw-shadow-hard)]">
-      <div id="dual-workspace-container" class="h-full">
-        <!-- Rendered by dual-workspace.js -->
-      </div>
-    </aside>
-
-    <!-- Right: Collapsible AI Study Assistant & Copilot Sidebar -->
-    <aside id="ai-assistant-sidebar" class="w-84 lg:w-96 flex-shrink-0 h-full flex flex-col transition-all duration-200 border-l-2 border-[var(--hw-border)] bg-[var(--hw-bg-panel)] shadow-[var(--hw-shadow-hard)] hidden">
-      <div id="ai-assistant-container" class="h-full">
-        <!-- Rendered by ai-assistant.js -->
-      </div>
+    <aside id="dual-workspace-wrapper" class="notes-panel">
+      <div id="dual-workspace-container" class="h-full"></div>
     </aside>
   </main>
 
-  <!-- ================= TAPE TRANSPORT CONTROLLER (TTS AUDIO) ================= -->
-  <div id="floating-tts-bar" class="sticky bottom-0 z-30 bg-[var(--hw-bg-panel)] border-t-2 border-[var(--hw-border)] px-4 py-2.5 flex items-center justify-between shadow-[var(--hw-shadow-hard)]">
-    
-    <!-- Transport Controls (Tape Deck Style) -->
-    <div class="flex items-center space-x-3">
-      <div class="flex items-center space-x-2 bg-[var(--hw-bg-inset)] p-1.5 rounded-[3px] border-2 border-[var(--hw-border)] shadow-[var(--hw-shadow-inset-sm)]">
-        <button id="tts-prev-sentence-btn" class="hw-btn p-2" title="Rewind to Previous Sentence">
+  <div id="floating-tts-bar" class="tts-bar">
+    <div class="toolbar-cluster">
+      <div class="status-chip p-1.5">
+        <button id="tts-prev-sentence-btn" class="hw-btn p-2" title="Previous sentence">
           <i data-lucide="skip-back" class="w-4 h-4"></i>
         </button>
-
-        <button id="tts-main-play-btn" class="hw-btn hw-btn-lg hw-btn-orange px-4 py-2 font-extrabold" title="Play / Pause Speech Synthesis (Shift + Space)">
+        <button id="tts-main-play-btn" class="hw-btn hw-btn-lg hw-btn-orange px-4 py-2 font-extrabold" title="Play or pause (Shift + Space)">
           <i id="tts-play-icon" data-lucide="play" class="w-5 h-5"></i>
-          <span class="font-mono text-xs">PLAY</span>
+          <span>Listen</span>
         </button>
-
-        <button id="tts-next-sentence-btn" class="hw-btn p-2" title="Fast Forward to Next Sentence">
+        <button id="tts-next-sentence-btn" class="hw-btn p-2" title="Next sentence">
           <i data-lucide="skip-forward" class="w-4 h-4"></i>
         </button>
       </div>
-
-      <!-- Live Karaoke Highlight Word LCD Readout -->
-      <div class="hidden sm:flex items-center space-x-2 px-3 py-1.5 bg-[var(--hw-bg-inset)] border-2 border-[var(--hw-border)] rounded-[2px] shadow-[var(--hw-shadow-inset-sm)] max-w-xs">
+      <div class="status-chip hidden sm:flex max-w-xs">
         <span class="hw-led hw-led-green active"></span>
-        <span class="font-mono text-[10px] text-[var(--hw-text-muted)] font-extrabold">DSP_VOX:</span>
-        <span id="tts-current-word" class="font-mono text-xs font-bold text-[var(--hw-text-primary)] truncate">READY</span>
+        <span id="tts-current-word" class="font-mono text-xs font-bold truncate">Ready</span>
       </div>
     </div>
-
-    <!-- Status & Pitch / Speed Dial -->
-    <div class="flex items-center space-x-3 text-xs">
-      <span id="tts-status-text" class="font-mono text-xs font-bold text-[var(--hw-text-secondary)] hidden md:inline">STOPPED</span>
-
-      <div class="flex items-center space-x-2 bg-[var(--hw-bg-inset)] px-2.5 py-1 rounded-[2px] border-2 border-[var(--hw-border)] shadow-[var(--hw-shadow-inset-sm)]">
-        <span class="font-mono text-[10px] font-extrabold text-[var(--hw-text-muted)]">SPEED</span>
-        <select id="tts-speed-select" class="hw-select py-1 px-2 text-xs border-none bg-transparent shadow-none cursor-pointer">
-          <option value="0.75">0.75x</option>
-          <option value="1.0" selected>1.00x</option>
-          <option value="1.25">1.25x</option>
-          <option value="1.5">1.50x</option>
-          <option value="1.75">1.75x</option>
-          <option value="2.0">2.00x</option>
+    <div class="toolbar-cluster text-xs">
+      <span id="tts-status-text" class="hidden md:inline font-mono font-bold text-[var(--hw-text-secondary)]">Stopped</span>
+      <label class="status-chip">
+        <span class="group-label">Speed</span>
+        <select id="tts-speed-select" class="hw-select py-1 px-2 text-xs border-none bg-transparent shadow-none">
+          <option value="0.75">0.75×</option>
+          <option value="1.0" selected>1×</option>
+          <option value="1.25">1.25×</option>
+          <option value="1.5">1.5×</option>
+          <option value="1.75">1.75×</option>
+          <option value="2.0">2×</option>
         </select>
-      </div>
+      </label>
     </div>
   </div>
 
-  <!-- ================= POP-UP MODAL: AMBIENT SOUNDSCAPE SYNTHESIZER ================= -->
-  <div id="soundscape-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-[var(--hw-bg-panel)] max-w-md w-full border-3 border-[var(--hw-border)] rounded-[4px] shadow-[var(--hw-shadow-hard)] p-5 space-y-4">
-      
-      <div class="flex items-center justify-between border-b-2 border-[var(--hw-border)] pb-2.5">
-        <div class="flex items-center space-x-2">
-          <span class="hw-led hw-led-orange active"></span>
-          <h3 class="font-mono font-bold text-xs uppercase tracking-wider text-[var(--hw-text-primary)]">ANALOG SOUNDSCAPE GENERATOR</h3>
-        </div>
-        <button class="close-modal-btn hw-btn hw-btn-sm p-1.5">
+  <div id="soundscape-modal" class="modal-backdrop hidden" role="dialog" aria-labelledby="soundscape-title">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="soundscape-title">Background sounds</h3>
+        <button class="close-modal-btn hw-btn hw-btn-sm p-1.5" aria-label="Close">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
-
       <div class="space-y-3">
-        
-        <!-- Deep Brown Noise -->
-        <div class="p-3 bg-[var(--hw-bg-inset)] border-2 border-[var(--hw-border)] rounded-[2px] shadow-[var(--hw-shadow-inset-sm)]">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="font-mono text-xs font-bold text-[var(--hw-text-primary)]">DEEP BROWN NOISE (1/f²)</span>
-            <span class="font-mono text-[10px] text-[var(--hw-orange)] font-bold">RESTLESSNESS MASK</span>
-          </div>
+        <div class="sound-row">
+          <div class="sound-row-head"><span>Brown noise</span><span>Restlessness</span></div>
           <input type="range" id="sound-slider-brown" min="0" max="100" value="0" class="hw-range w-full" />
         </div>
-
-        <!-- Balanced Pink Noise -->
-        <div class="p-3 bg-[var(--hw-bg-inset)] border-2 border-[var(--hw-border)] rounded-[2px] shadow-[var(--hw-shadow-inset-sm)]">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="font-mono text-xs font-bold text-[var(--hw-text-primary)]">BALANCED PINK NOISE (1/f)</span>
-            <span class="font-mono text-[10px] text-pink-600 font-bold">ALPHA SYNC</span>
-          </div>
+        <div class="sound-row">
+          <div class="sound-row-head"><span>Pink noise</span><span>Calm</span></div>
           <input type="range" id="sound-slider-pink" min="0" max="100" value="0" class="hw-range w-full" />
         </div>
-
-        <!-- 40Hz Gamma Focus Beats -->
-        <div class="p-3 bg-[var(--hw-bg-inset)] border-2 border-[var(--hw-border)] rounded-[2px] shadow-[var(--hw-shadow-inset-sm)]">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="font-mono text-xs font-bold text-[var(--hw-text-primary)]">40Hz GAMMA BINAURAL</span>
-            <span class="font-mono text-[10px] text-[var(--hw-cyan)] font-bold">WORKING MEMORY</span>
-          </div>
+        <div class="sound-row">
+          <div class="sound-row-head"><span>40 Hz binaural</span><span>Focus</span></div>
           <input type="range" id="sound-slider-binaural40" min="0" max="100" value="0" class="hw-range w-full" />
         </div>
-
-        <!-- 10Hz Alpha Calming Beats -->
-        <div class="p-3 bg-[var(--hw-bg-inset)] border-2 border-[var(--hw-border)] rounded-[2px] shadow-[var(--hw-shadow-inset-sm)]">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="font-mono text-xs font-bold text-[var(--hw-text-primary)]">10Hz ALPHA BINAURAL</span>
-            <span class="font-mono text-[10px] text-emerald-600 font-bold">FLOW STATE</span>
-          </div>
+        <div class="sound-row">
+          <div class="sound-row-head"><span>10 Hz binaural</span><span>Flow</span></div>
           <input type="range" id="sound-slider-binaural10" min="0" max="100" value="0" class="hw-range w-full" />
         </div>
-
-        <!-- Gentle Rain Synthesizer -->
-        <div class="p-3 bg-[var(--hw-bg-inset)] border-2 border-[var(--hw-border)] rounded-[2px] shadow-[var(--hw-shadow-inset-sm)]">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="font-mono text-xs font-bold text-[var(--hw-text-primary)]">LFO RAIN GENERATOR</span>
-            <span class="font-mono text-[10px] text-[var(--hw-text-secondary)] font-bold">AMBIENT</span>
-          </div>
+        <div class="sound-row">
+          <div class="sound-row-head"><span>Rain</span><span>Ambient</span></div>
           <input type="range" id="sound-slider-rain" min="0" max="100" value="0" class="hw-range w-full" />
         </div>
       </div>
-
-      <div class="pt-2 flex items-center justify-between border-t-2 border-[var(--hw-border)]">
-        <button id="stop-all-sounds-btn" class="hw-btn hw-btn-sm text-rose-600 font-bold">
-          KILL SOUNDS
-        </button>
-        <button class="close-modal-btn hw-btn hw-btn-orange font-bold">
-          DONE
-        </button>
+      <div class="modal-foot">
+        <button id="stop-all-sounds-btn" class="hw-btn hw-btn-sm">Mute all</button>
+        <button class="close-modal-btn hw-btn hw-btn-orange">Done</button>
       </div>
     </div>
   </div>
 
-  <!-- ================= POP-UP MODAL: SENSORY FIDGET DOCK ================= -->
-  <div id="sensory-dock-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-[var(--hw-bg-panel)] max-w-lg w-full border-3 border-[var(--hw-border)] rounded-[4px] shadow-[var(--hw-shadow-hard)] flex flex-col overflow-hidden">
-      <div id="sensory-dock-modal-content">
-        <!-- Rendered by sensory-dock.js -->
-      </div>
-      <div class="p-2.5 bg-[var(--hw-bg-inset)] border-t-2 border-[var(--hw-border)] flex justify-end">
-        <button class="close-modal-btn hw-btn hw-btn-sm hw-btn-orange">
-          CLOSE DOCK
-        </button>
+  <div id="sensory-dock-modal" class="modal-backdrop hidden" role="dialog" aria-label="Fidget tools">
+    <div class="modal-card modal-card-wide">
+      <div id="sensory-dock-modal-content"></div>
+      <div class="modal-foot">
+        <button class="close-modal-btn hw-btn hw-btn-sm hw-btn-orange">Close</button>
       </div>
     </div>
   </div>
 
-  <!-- ================= POP-UP MODAL: MOVEMENT BREAK CARDS ================= -->
-  <div id="movement-break-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-[var(--hw-bg-panel)] max-w-md w-full border-3 border-[var(--hw-border)] rounded-[4px] shadow-[var(--hw-shadow-hard)] p-5 space-y-4">
-      
+  <div id="movement-break-modal" class="modal-backdrop hidden" role="dialog" aria-labelledby="break-card-title">
+    <div class="modal-card">
       <div class="flex items-center justify-between">
-        <span id="break-card-badge" class="hw-btn hw-btn-sm text-[10px]">PHYSICAL</span>
-        <span id="break-card-duration" class="font-mono text-xs font-bold text-[var(--hw-orange)] bg-[var(--hw-bg-inset)] px-2 py-1 border border-[var(--hw-border)]">45S SPRINT</span>
+        <span id="break-card-badge" class="hw-btn hw-btn-sm text-[10px]">Physical</span>
+        <span id="break-card-duration" class="status-chip font-mono text-xs">45s</span>
       </div>
-
-      <div class="space-y-2">
-        <h3 id="break-card-title" class="font-mono text-base font-extrabold text-[var(--hw-text-primary)] uppercase">MOVEMENT RESET</h3>
-        <p id="break-card-instruction" class="text-sm font-medium leading-relaxed text-[var(--hw-text-primary)] bg-[var(--hw-bg-inset)] p-3.5 border-2 border-[var(--hw-border)] rounded-[2px] shadow-[var(--hw-shadow-inset-sm)]">
-          Roll your shoulders backward 10 times in wide circles.
-        </p>
-      </div>
-
-      <div class="p-2.5 bg-[var(--hw-bg-inset)] border border-[var(--hw-border)] flex items-start space-x-2">
-        <i data-lucide="info" class="w-4 h-4 text-[var(--hw-orange)] flex-shrink-0 mt-0.5"></i>
-        <p id="break-card-benefit" class="text-[11px] text-[var(--hw-text-secondary)] font-mono">
-          Restores prefrontal cortex dopamine receptors.
-        </p>
-      </div>
-
+      <h3 id="break-card-title" class="text-base font-extrabold">Movement reset</h3>
+      <p id="break-card-instruction" class="sound-row leading-relaxed">
+        Roll your shoulders backward 10 times in wide circles.
+      </p>
+      <p id="break-card-benefit" class="text-xs text-[var(--hw-text-secondary)]">A short reset can help you return to the page.</p>
       <div class="flex items-center space-x-2 pt-1">
-        <button id="next-break-card-btn" class="flex-1 hw-btn hw-btn-sm">
-          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-          <span>ANOTHER CARD</span>
-        </button>
-        <button id="close-break-modal-btn" class="flex-1 hw-btn hw-btn-sm hw-btn-green">
-          <i data-lucide="check" class="w-3.5 h-3.5"></i>
-          <span>DONE (+50 XP)</span>
-        </button>
+        <button id="next-break-card-btn" class="flex-1 hw-btn hw-btn-sm">Another card</button>
+        <button id="close-break-modal-btn" class="flex-1 hw-btn hw-btn-sm hw-btn-green">Done (+50 XP)</button>
       </div>
     </div>
   </div>
 
-  <!-- ================= POP-UP MODAL: GAMIFICATION & BADGES ================= -->
-  <div id="gamification-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-[var(--hw-bg-panel)] max-w-lg w-full border-3 border-[var(--hw-border)] rounded-[4px] shadow-[var(--hw-shadow-hard)] p-5 space-y-4">
-      <div class="flex items-center justify-between border-b-2 border-[var(--hw-border)] pb-2.5">
-        <div class="flex items-center space-x-2">
-          <span class="text-xl">🏆</span>
-          <div>
-            <h3 class="font-mono font-bold text-xs uppercase tracking-wider text-[var(--hw-text-primary)]">ACHIEVEMENTS & TELEMETRY</h3>
-          </div>
-        </div>
-        <button class="close-modal-btn hw-btn hw-btn-sm p-1">
+  <div id="gamification-modal" class="modal-backdrop hidden" role="dialog" aria-labelledby="badges-title">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="badges-title">Rewards</h3>
+        <button class="close-modal-btn hw-btn hw-btn-sm p-1" aria-label="Close">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
-
-      <div id="badges-list-container" class="space-y-2 max-h-[360px] overflow-y-auto pr-1">
-        <!-- Rendered by gamification.js -->
-      </div>
-
-      <div class="pt-2 flex justify-end">
-        <button class="close-modal-btn hw-btn hw-btn-sm hw-btn-orange">
-          RETURN TO STUDY
-        </button>
+      <div id="badges-list-container" class="space-y-2 max-h-[360px] overflow-y-auto pr-1"></div>
+      <div class="modal-foot">
+        <button class="close-modal-btn hw-btn hw-btn-sm hw-btn-orange">Back to reading</button>
       </div>
     </div>
   </div>
 
-  <!-- ================= TOAST: FRICTIONLESS 25M BREAK PROMPT ================= -->
-  <div id="frictionless-break-prompt" class="fixed bottom-16 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-[92%] bg-[var(--hw-bg-panel)] border-3 border-[var(--hw-border)] rounded-[3px] shadow-[var(--hw-shadow-hard)] p-3.5 hidden items-center justify-between space-x-3">
-    <div class="flex items-center space-x-2.5">
-      <div class="w-8 h-8 rounded-[2px] bg-[var(--hw-bg-inset)] border-2 border-[var(--hw-border)] flex items-center justify-center text-base">
-        🧘
-      </div>
-      <div>
-        <h4 class="font-mono text-xs font-bold text-[var(--hw-text-primary)] uppercase">25M FOCUS SPRINT HIT</h4>
-        <p class="font-mono text-[10px] text-[var(--hw-text-secondary)]">2-minute reset recommended.</p>
-      </div>
+  <div id="frictionless-break-prompt" class="break-toast hidden">
+    <div>
+      <h4 class="font-bold text-sm">25-minute sprint complete</h4>
+      <p class="text-xs text-[var(--hw-text-secondary)]">A 2-minute reset is recommended.</p>
     </div>
-    <div class="flex items-center space-x-1.5 flex-shrink-0">
-      <button id="break-prompt-snooze-btn" class="hw-btn hw-btn-sm text-[10px]">
-        SNOOZE 5M
-      </button>
-      <button id="break-prompt-start-btn" class="hw-btn hw-btn-sm hw-btn-green text-[10px]">
-        TAKE BREAK
-      </button>
+    <div class="flex items-center gap-1.5">
+      <button id="break-prompt-snooze-btn" class="hw-btn hw-btn-sm text-[10px]">Snooze 5m</button>
+      <button id="break-prompt-start-btn" class="hw-btn hw-btn-sm hw-btn-green text-[10px]">Take break</button>
     </div>
   </div>
 
-  <!-- Main JavaScript App Entry -->
   <script type="module" src="app.js"></script>
 </body>
 </html>

@@ -80,11 +80,14 @@ export class PDFViewer {
       console.error('Error loading PDF:', err);
       if (this.container) {
         this.container.innerHTML = `
-          <div class="p-8 text-center bg-rose-500/10 border border-rose-500/20 rounded-2xl max-w-md mx-auto my-12 text-rose-600">
-            <h3 class="font-bold text-base mb-1">Failed to load PDF</h3>
-            <p class="text-xs">${err.message || 'Please verify the PDF file format.'}</p>
+          <div class="error-card">
+            <h3 class="font-bold text-base mb-2">Could not open that PDF</h3>
+            <p class="text-sm text-[var(--hw-text-secondary)] mb-4">${err.message || 'Try another file, or use Open PDF.'}</p>
+            <button type="button" class="hw-btn hw-btn-orange" data-trigger-upload>Choose a PDF</button>
           </div>
         `;
+        const retry = this.container.querySelector('[data-trigger-upload]');
+        if (retry) retry.addEventListener('click', () => document.getElementById('pdf-file-input')?.click());
       }
     }
   }

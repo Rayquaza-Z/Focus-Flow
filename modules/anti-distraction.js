@@ -167,7 +167,7 @@ export class AntiDistractionGuardrails {
     if (this.isDeepWorkMode) {
       document.body.classList.add('deep-work-active');
       if (this.audioSynthesizer) this.audioSynthesizer.playTactileClick(780, 'sine', 0.05);
-      if (this.gamification) this.gamification.showMiniToast('🛡️ Minimalist Deep Work Mode Activated (Shift + F to exit)');
+      if (this.gamification) this.gamification.showMiniToast('Focus mode on — Shift + F to exit');
       this.renderDeepWorkExitBadge();
     } else {
       document.body.classList.remove('deep-work-active');
@@ -186,12 +186,8 @@ export class AntiDistractionGuardrails {
     this.removeDeepWorkExitBadge();
     const badge = document.createElement('button');
     badge.id = 'deep-work-exit-pill';
-    badge.className = 'fixed top-3 right-4 z-50 flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-[var(--bg-card)]/80 hover:bg-[var(--bg-card)] border border-[var(--border-color)] shadow-md text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition backdrop-blur-md';
-    badge.innerHTML = `
-      <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
-      <span>Deep Work Mode</span>
-      <kbd class="px-1.5 py-0.5 bg-[var(--bg-secondary)] rounded text-[10px] ml-1">Shift+F</kbd>
-    `;
+    badge.className = 'hw-btn fixed top-3 right-4 z-50';
+    badge.innerHTML = `<span>Exit focus mode</span><kbd class="text-[10px]">Shift+F</kbd>`;
     badge.addEventListener('click', () => this.toggleDeepWorkMode(false));
     document.body.appendChild(badge);
   }

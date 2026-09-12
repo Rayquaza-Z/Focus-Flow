@@ -104,18 +104,10 @@ export class DualWorkspace {
       <div class="flex flex-col h-full bg-[var(--hw-bg-panel)]">
         <!-- Physical Index Card Filing Tabs Header -->
         <div class="index-card-header">
-          <button id="ws-tab-notes" class="index-tab ${this.activeTab === 'notes' ? 'active' : ''}">
-            [NOTES]
-          </button>
-          <button id="ws-tab-checklist" class="index-tab ${this.activeTab === 'checklist' ? 'active' : ''}">
-            [TASKS]
-          </button>
-          <button id="ws-tab-flashcards" class="index-tab ${this.activeTab === 'flashcards' ? 'active' : ''}">
-            [CARDS]
-          </button>
-          <button id="ws-tab-summary" class="index-tab ${this.activeTab === 'summary' ? 'active' : ''}">
-            [TL;DR]
-          </button>
+          <button id="ws-tab-notes" class="index-tab ${this.activeTab === 'notes' ? 'active' : ''}">Notes</button>
+          <button id="ws-tab-checklist" class="index-tab ${this.activeTab === 'checklist' ? 'active' : ''}">Tasks</button>
+          <button id="ws-tab-flashcards" class="index-tab ${this.activeTab === 'flashcards' ? 'active' : ''}">Cards</button>
+          <button id="ws-tab-summary" class="index-tab ${this.activeTab === 'summary' ? 'active' : ''}">Summary</button>
         </div>
 
         <!-- Filing Tray Body -->
@@ -151,16 +143,16 @@ export class DualWorkspace {
       target.innerHTML = `
         <div class="flex flex-col h-full space-y-2.5">
           <div class="flex items-center justify-between font-mono text-[11px] text-[var(--hw-text-secondary)]">
-            <span>SCRATCHPAD // AUTO-SAVED</span>
+            <span>Notes (saved in this browser)</span>
             <button id="copy-notes-btn" class="hw-btn hw-btn-sm text-[10px] py-0.5 px-1.5">
               <i data-lucide="copy" class="w-3 h-3"></i>
               <span>COPY</span>
             </button>
           </div>
-          <textarea id="ws-notes-editor" placeholder="Record telemetry, quotes, or hypotheses..." class="flex-1 w-full p-3 bg-[var(--hw-bg-inset)] border-2 border-[var(--hw-border)] rounded-[2px] text-[var(--hw-text-primary)] text-xs font-mono focus:outline-none focus:border-[var(--hw-orange)] resize-none leading-relaxed min-h-[300px] shadow-[var(--hw-shadow-inset-sm)]">${this.notes}</textarea>
-          <div class="font-mono text-[10px] text-[var(--hw-text-muted)] flex items-center justify-between">
-            <span>PERSISTED TO LOCAL DRIVE</span>
-            <button id="insert-quote-btn" class="text-[var(--hw-orange)] hover:underline font-bold">+ QUOTE PG ${this.currentPageNumber}</button>
+          <textarea id="ws-notes-editor" placeholder="Jot quotes, questions, or reminders..." class="flex-1 w-full p-3 bg-[var(--hw-bg-inset)] border-2 border-[var(--hw-border)] rounded-[2px] text-[var(--hw-text-primary)] text-sm focus:outline-none focus:border-[var(--hw-orange)] resize-none leading-relaxed min-h-[300px] shadow-[var(--hw-shadow-inset-sm)]">${this.notes}</textarea>
+          <div class="text-[10px] text-[var(--hw-text-muted)] flex items-center justify-between">
+            <span>Stays on this device</span>
+            <button id="insert-quote-btn" class="text-[var(--hw-orange)] hover:underline font-bold">+ Quote page ${this.currentPageNumber}</button>
           </div>
         </div>
       `;
@@ -209,7 +201,7 @@ export class DualWorkspace {
       target.innerHTML = `
         <div class="flex flex-col h-full space-y-3">
           <form id="add-task-form" class="flex space-x-1.5">
-            <input id="new-task-input" type="text" placeholder="Add study objective..." class="flex-1 px-2.5 py-1.5 bg-[var(--hw-bg-inset)] border-2 border-[var(--hw-border)] rounded-[2px] text-xs font-mono text-[var(--hw-text-primary)] focus:outline-none focus:border-[var(--hw-orange)] shadow-[var(--hw-shadow-inset-sm)]" required />
+            <input id="new-task-input" type="text" placeholder="Add a task..." class="flex-1 px-2.5 py-1.5 bg-[var(--hw-bg-inset)] border-2 border-[var(--hw-border)] rounded-[2px] text-xs text-[var(--hw-text-primary)] focus:outline-none focus:border-[var(--hw-orange)] shadow-[var(--hw-shadow-inset-sm)]" required />
             <select id="new-task-priority" class="hw-select text-[11px] py-1 px-1.5">
               <option value="high">HI</option>
               <option value="medium" selected>MED</option>
@@ -221,7 +213,7 @@ export class DualWorkspace {
           </form>
 
           <div class="space-y-2 flex-1 overflow-y-auto">
-            ${itemsHtml || '<p class="font-mono text-[11px] text-[var(--hw-text-muted)] text-center py-6">NO ACTION ITEMS LOGGED.</p>'}
+            ${itemsHtml || '<p class="text-sm text-[var(--hw-text-muted)] text-center py-6">No tasks yet.</p>'}
           </div>
         </div>
       `;
@@ -271,7 +263,7 @@ export class DualWorkspace {
       if (this.flashcards.length === 0) {
         target.innerHTML = `
           <div class="text-center py-12 font-mono text-[11px] text-[var(--hw-text-muted)]">
-            <p>NO CONCEPT CARDS LOADED FOR THIS PAGE.</p>
+            <p>No cards for this page yet. Open a PDF with more text.</p>
           </div>
         `;
       } else {
@@ -289,7 +281,7 @@ export class DualWorkspace {
 
         target.innerHTML = `
           <div class="space-y-2.5">
-            <div class="font-mono text-[10px] font-bold text-[var(--hw-text-muted)] uppercase">AUTO-INDEXED CARDS (PG ${this.currentPageNumber})</div>
+            <div class="text-[10px] font-bold text-[var(--hw-text-muted)] uppercase">Cards from page ${this.currentPageNumber}</div>
             ${cardsHtml}
           </div>
         `;
@@ -307,10 +299,10 @@ export class DualWorkspace {
       target.innerHTML = `
         <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <span class="font-mono text-[10px] font-bold text-[var(--hw-text-muted)] uppercase">TELEMETRY SUMMARY (PG ${this.currentPageNumber})</span>
+            <span class="text-[10px] font-bold text-[var(--hw-text-muted)] uppercase">Page ${this.currentPageNumber} summary</span>
           </div>
           <div class="p-3 bg-[var(--hw-bg-inset)] border-2 border-[var(--hw-border)] rounded-[2px] font-mono text-xs text-[var(--hw-text-primary)] leading-relaxed whitespace-pre-line shadow-[var(--hw-shadow-inset-sm)]">
-            ${this.summary || 'No summary telemetry available.'}
+            ${this.summary || 'Nothing to summarize on this page.'}
           </div>
         </div>
       `;
