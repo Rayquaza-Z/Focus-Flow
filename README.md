@@ -85,7 +85,23 @@ FocusFlow now includes an AI Study Assistant that helps you understand and retai
 3. Paste your API key and click Save
 4. Start using AI features on any PDF page!
 
-**Privacy:** Your API key is stored only in your browser's localStorage. Requests go directly from your browser to Google's API — we never see your key or your documents.
+### Privacy & Security
+
+**Important:** When you use AI features, the text from your PDF page (up to 3000 characters) is sent directly to Google's Gemini API for processing. Nothing is stored on our servers (there are none!) — your API key and documents stay in your browser. However, be aware that:
+
+- Your PDF text is transmitted to Google's servers when using AI features
+- The API key is sent securely via HTTP headers (not URL parameters) to avoid exposure in browser history
+- Each user provides their own API key — no keys are shared or stored centrally
+- No data persists beyond the API request; Google does not store your content
+
+For complete privacy, only use AI features with materials you're comfortable sending to Google's API.
+
+### Advanced Features
+
+- **Request Cancellation:** Clicking a different AI feature automatically cancels the previous request
+- **Rate Limit Handling:** Automatic retry with exponential backoff if you hit Google's rate limits
+- **Input Validation:** Prevents wasted API calls on empty pages or image-only pages
+- **Configurable Token Limit:** Increased to 1024 tokens for better quiz generation
 
 ---
 

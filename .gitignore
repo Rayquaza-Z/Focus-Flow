@@ -1,6 +1,20 @@
+# Examples 1:
+(empty — output nothing)
+
+# Example 2 (Project with artifacts):
 ```
-# System files
-.DS_Store
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+dist/
+build/
+
+# Dependencies
+.venv/
+venv/
+node_modules/
 
 # Logs and temp files
 *.log
@@ -10,39 +24,12 @@
 # Environment
 .env
 .env.local
-*.env.*
+.env.*
 
 # Editors
 .vscode/
 .idea/
 
-# Dependencies
-node_modules/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-venv/
-.venv/
-.env
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Build artifacts
-build/
-dist/
-*.egg-info/
-.coverage
-coverage/
-htmlcov/
-.pytest_cache/
-.mypy_cache/
-
-# OS generated files
-.DS_Store
-Thumbs.db
-ehthumbs.db
-Icon?
-.CFUserTextEncoding
+# Original rules preserved
+*.log
 ```
