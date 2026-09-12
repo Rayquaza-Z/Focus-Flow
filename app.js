@@ -494,9 +494,7 @@ class App {
     const apiKeyInput = $('ai-api-key-input');
     const saveBtn = $('ai-save-key-btn');
     const clearBtn = $('ai-clear-key-btn');
-    const statusBadge = $('ai-status-badge');
     const responseContainer = $('ai-response-container');
-    const responseContent = $('ai-response-content');
 
     const savedKey = this.aiAssistant.getApiKey();
     if (apiKeyInput) apiKeyInput.value = savedKey;
@@ -586,7 +584,25 @@ class App {
     } else if (error.message === 'INVALID_API_KEY') {
       message = 'Invalid API key. Check your Google AI Studio key.';
     } else if (error.message === 'QUIZ_PARSE_ERROR') {
-      message = 'Could not parse quiz. Try again.';
+      message = 'Could not parse quiz. Try again or use more text.';
+    } else if (error.message === 'RATE_LIMIT_EXCEEDED') {
+      message = 'Rate limit reached. Please wait a moment and try again.';
+    } else if (error.message === 'MODEL_NOT_FOUND') {
+      message = 'AI model unavailable. Please check for updates.';
+    } else if (error.message === 'REQUEST_CANCELLED') {
+      // Silent fail - user clicked another button
+      return;
+    } else if (error.message?.startsWith('INVALID_INPUT_')) {
+      const reason = error.message.replace('INVALID_INPUT_', '');
+      if (reason === 'EMPTY_INPUT' || reason === 'WHITESPACE_ONLY') {
+        message = 'No text found on this page. Try a different page.';
+      } else if (reason === 'INSUFFICIENT_TEXT') {
+        message = 'Not enough text on this page for AI analysis.';
+      }
+    } else if (error.message === 'NO_RESPONSE') {
+      message = 'AI returned no response. Try again.';
+    } else if (error.message === 'MAX_RETRIES_EXCEEDED') {
+      message = 'Request failed after multiple attempts. Check connection.';
     }
     this.gamification.showMiniToast(`⚠️ ${message}`);
   }
