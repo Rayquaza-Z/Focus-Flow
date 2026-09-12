@@ -69,6 +69,14 @@
         <i data-lucide="hand" class="w-4 h-4"></i>
       </button>
 
+      <button id="open-ai-settings-btn" class="hw-btn p-2" title="AI Study Assistant">
+        <span aria-hidden="true">🤖</span>
+      </button>
+
+      <button id="open-data-mgmt-btn" class="hw-btn p-2" title="Export/Import Data">
+        <i data-lucide="database" class="w-4 h-4"></i>
+      </button>
+
       <input type="file" id="pdf-file-input" accept="application/pdf" class="hidden" />
       <button id="upload-pdf-btn" class="hw-btn hw-btn-orange font-bold" title="Open a PDF from your computer">
         <i data-lucide="upload" class="w-4 h-4"></i>
@@ -292,6 +300,88 @@
     <div class="flex items-center gap-1.5">
       <button id="break-prompt-snooze-btn" class="hw-btn hw-btn-sm text-[10px]">Snooze 5m</button>
       <button id="break-prompt-start-btn" class="hw-btn hw-btn-sm hw-btn-green text-[10px]">Take break</button>
+    </div>
+  </div>
+
+  <div id="ai-settings-modal" class="modal-backdrop hidden" role="dialog" aria-labelledby="ai-settings-title">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="ai-settings-title">🤖 AI Study Assistant</h3>
+        <button class="close-modal-btn hw-btn hw-btn-sm p-1" aria-label="Close">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <p class="text-sm text-[var(--hw-text-secondary)]">
+          Get AI-powered help with summarizing, explaining, and quizzing you on your reading material. 
+          Your API key is stored locally and never sent to our servers.
+        </p>
+        <div class="sound-row">
+          <label class="group-label block mb-2">Google AI Studio API Key</label>
+          <input type="password" id="ai-api-key-input" placeholder="Enter your API key (AIzaSy...)" class="hw-select w-full" />
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="text-xs text-[var(--hw-link-color,#0891b2)] underline mt-1 inline-block">Get a free API key from Google AI Studio</a>
+        </div>
+        <div id="ai-status-badge" class="status-chip hidden">
+          <span class="hw-led hw-led-green active"></span>
+          <span class="text-xs font-bold">API Key Configured</span>
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button id="ai-save-key-btn" class="flex-1 hw-btn hw-btn-orange">Save Key</button>
+          <button id="ai-clear-key-btn" class="flex-1 hw-btn hw-btn-sm">Clear Key</button>
+        </div>
+        <div class="border-t border-[var(--hw-border)] pt-3">
+          <h4 class="font-bold text-sm mb-2">AI Features</h4>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="ai-explain-btn" class="hw-btn hw-btn-sm text-left">📖 Explain Like I'm 5</button>
+            <button id="ai-summarize-btn" class="hw-btn hw-btn-sm text-left">📝 Summarize</button>
+            <button id="ai-quiz-btn" class="hw-btn hw-btn-sm text-left">❓ Generate Quiz</button>
+            <button id="ai-concepts-btn" class="hw-btn hw-btn-sm text-left">💡 Key Concepts</button>
+          </div>
+        </div>
+        <div id="ai-response-container" class="hidden bg-[var(--hw-bg-subtle)] rounded-lg p-3 max-h-64 overflow-y-auto">
+          <div class="flex justify-between items-center mb-2">
+            <h5 class="font-bold text-xs">AI Response</h5>
+            <button id="ai-close-response-btn" class="hw-btn hw-btn-sm p-1">
+              <i data-lucide="x" class="w-3 h-3"></i>
+            </button>
+          </div>
+          <div id="ai-response-content" class="text-xs whitespace-pre-wrap"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="close-modal-btn hw-btn hw-btn-sm hw-btn-orange">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="data-management-modal" class="modal-backdrop hidden" role="dialog" aria-labelledby="data-mgmt-title">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="data-mgmt-title">💾 Export / Import Data</h3>
+        <button class="close-modal-btn hw-btn hw-btn-sm p-1" aria-label="Close">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <p class="text-sm text-[var(--hw-text-secondary)]">
+          Backup your notes, settings, and progress. Export creates a JSON file you can save or import later.
+        </p>
+        <div class="flex gap-2">
+          <button id="export-data-btn" class="flex-1 hw-btn hw-btn-orange">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            Export All Data
+          </button>
+          <button id="import-data-btn" class="flex-1 hw-btn">
+            <i data-lucide="upload" class="w-4 h-4"></i>
+            Import Data
+          </button>
+        </div>
+        <input type="file" id="import-file-input" accept=".json" class="hidden" />
+        <div id="import-status" class="text-xs hidden"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="close-modal-btn hw-btn hw-btn-sm">Close</button>
+      </div>
     </div>
   </div>
 

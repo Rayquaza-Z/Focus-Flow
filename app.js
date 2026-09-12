@@ -14,6 +14,7 @@ import { PDFViewer } from './modules/pdf-viewer.js';
 import { ActiveRecallEngine } from './modules/active-recall.js';
 import { TimeAwarenessEngine } from './modules/time-awareness.js';
 import { AntiDistractionGuardrails } from './modules/anti-distraction.js';
+import { AIStudyAssistant } from './modules/ai-study-assistant.js';
 
 const SOUND_IDS = ['brown', 'pink', 'binaural40', 'binaural10', 'rain'];
 
@@ -47,6 +48,11 @@ class App {
     this.viewerMode = 'standard';
     this.dualWorkspaceOpen = window.innerWidth >= 1100;
     this.currentDocumentName = '';
+    this.aiAssistant = new AIStudyAssistant({
+      apiKey: StorageManager.getAIKey(),
+      onStatusChange: (status) => this.updateAIStatus(status),
+      onError: (err) => this.handleAIError(err)
+    });
     this.init();
   }
 
@@ -422,6 +428,11 @@ class App {
       this.closeModal('sensory-dock-modal');
     });
     this.setupModalTrigger('open-badges-btn', 'gamification-modal', () => this.gamification.openBadgesModal());
+    this.setupModalTrigger('open-ai-settings-btn', 'ai-settings-modal');
+    this.setupModalTrigger('open-data-mgmt-btn', 'data-management-modal');
+
+    this.setupAIHandlers();
+    this.setupDataManagementHandlers();
 
     document.querySelectorAll('.modal-backdrop').forEach((modal) => {
       on(modal, 'click', (e) => {
@@ -476,6 +487,150 @@ class App {
     });
     modal?.querySelectorAll('.close-modal-btn').forEach((btn) => {
       on(btn, 'click', () => this.closeModal(modalId));
+    });
+  }
+
+  setupAIHandlers() {
+    const apiKeyInput = $('ai-api-key-input');
+    const saveBtn = $('ai-save-key-btn');
+    const clearBtn = $('ai-clear-key-btn');
+    const statusBadge = $('ai-status-badge');
+    const responseContainer = $('ai-response-container');
+    const responseContent = $('ai-response-content');
+
+    const savedKey = this.aiAssistant.getApiKey();
+    if (apiKeyInput) apiKeyInput.value = savedKey;
+    this.updateAIStatus({ hasKey: !!savedKey });
+
+    on(saveBtn, 'click', () => {
+      const key = apiKeyInput?.value?.trim();
+      if (key && key.length > 20) {
+        this.aiAssistant.setApiKey(key);
+        this.updateAIStatus({ hasKey: true });
+        this.gamification.showMiniToast('API key saved locally ✓');
+      } else {
+        this.gamification.showMiniToast('Please enter a valid API key');
+      }
+    });
+
+    on(clearBtn, 'click', () => {
+      this.aiAssistant.clearApiKey();
+      if (apiKeyInput) apiKeyInput.value = '';
+      this.updateAIStatus({ hasKey: false });
+      this.gamification.showMiniToast('API key cleared');
+    });
+
+    const featureHandlers = {
+      'ai-explain-btn': async () => {
+        const text = this.pdfViewer.getCurrentPageText();
+        if (!text) return this.gamification.showMiniToast('Open a PDF first');
+        try {
+          const result = await this.aiAssistant.explainLikeFive(text.substring(0, 3000));
+          this.showAIResponse(result);
+        } catch (e) { this.handleAIError(e); }
+      },
+      'ai-summarize-btn': async () => {
+        const text = this.pdfViewer.getCurrentPageText();
+        if (!text) return this.gamification.showMiniToast('Open a PDF first');
+        try {
+          const result = await this.aiAssistant.summarize(text.substring(0, 3000));
+          this.showAIResponse(result);
+        } catch (e) { this.handleAIError(e); }
+      },
+      'ai-quiz-btn': async () => {
+        const text = this.pdfViewer.getCurrentPageText();
+        if (!text) return this.gamification.showMiniToast('Open a PDF first');
+        try {
+          const result = await this.aiAssistant.generateQuiz(text.substring(0, 3000));
+          this.showAIResponse(JSON.stringify(result, null, 2));
+        } catch (e) { this.handleAIError(e); }
+      },
+      'ai-concepts-btn': async () => {
+        const text = this.pdfViewer.getCurrentPageText();
+        if (!text) return this.gamification.showMiniToast('Open a PDF first');
+        try {
+          const result = await this.aiAssistant.extractKeyConcepts(text.substring(0, 3000));
+          this.showAIResponse(result);
+        } catch (e) { this.handleAIError(e); }
+      }
+    };
+
+    Object.entries(featureHandlers).forEach(([btnId, handler]) => {
+      on($(btnId), 'click', handler);
+    });
+
+    on($('ai-close-response-btn'), 'click', () => {
+      responseContainer?.classList.add('hidden');
+    });
+  }
+
+  updateAIStatus(status) {
+    const badge = $('ai-status-badge');
+    if (badge) {
+      badge.classList.toggle('hidden', !status.hasKey);
+    }
+  }
+
+  showAIResponse(text) {
+    const container = $('ai-response-container');
+    const content = $('ai-response-content');
+    if (content) content.textContent = text;
+    if (container) container.classList.remove('hidden');
+  }
+
+  handleAIError(error) {
+    let message = 'AI request failed';
+    if (error.message === 'API_KEY_REQUIRED') {
+      message = 'Please add your Google AI API key first';
+      this.openModal('ai-settings-modal');
+    } else if (error.message === 'INVALID_API_KEY') {
+      message = 'Invalid API key. Check your Google AI Studio key.';
+    } else if (error.message === 'QUIZ_PARSE_ERROR') {
+      message = 'Could not parse quiz. Try again.';
+    }
+    this.gamification.showMiniToast(`⚠️ ${message}`);
+  }
+
+  setupDataManagementHandlers() {
+    on($('export-data-btn'), 'click', () => {
+      try {
+        const json = StorageManager.exportAllData();
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `focusflow-backup-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.gamification.showMiniToast('Data exported successfully ✓');
+      } catch (e) {
+        this.gamification.showMiniToast('Export failed');
+      }
+    });
+
+    on($('import-data-btn'), 'click', () => {
+      $('import-file-input')?.click();
+    });
+
+    on($('import-file-input'), 'change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          StorageManager.importAllData(evt.target.result);
+          this.gamification.showMiniToast('Data imported successfully ✓');
+          this.settings = StorageManager.getSettings();
+          this.applyTheme(this.settings.theme);
+          this.applyTypography();
+          this.aiAssistant.setApiKey(StorageManager.getAIKey());
+          this.updateAIStatus({ hasKey: this.aiAssistant.hasValidKey() });
+        } catch (err) {
+          this.gamification.showMiniToast('Import failed: Invalid file');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
     });
   }
 
