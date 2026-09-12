@@ -1,10 +1,11 @@
 ```
-# Dependencies
-node_modules/
+# System files
+.DS_Store
 
 # Logs and temp files
 *.log
 *.tmp
+*.swp
 
 # Environment
 .env
@@ -15,7 +16,8 @@ node_modules/
 .vscode/
 .idea/
 
-# Python
+# Dependencies
+node_modules/
 __pycache__/
 *.pyc
 *.pyo
@@ -24,5 +26,23 @@ __pycache__/
 venv/
 .venv/
 .env
-.env.*
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.coverage
+coverage/
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+.CFUserTextEncoding
 ```
