@@ -221,7 +221,7 @@ export class ActiveRecallEngine {
 
     paragraphs.forEach((p, idx) => {
       // Find headings or leading key terms
-      const match = p.match(/^([A-Z0-9\s:—\-]{3,35})(?::|\.|\n|-)/);
+      const match = p.match(/^([A-Z0-9\s:—-]{3,35})(?::|\.|\n|-)/);
       let anchor = '';
 
       if (match && match[1].trim().split(/\s+/).length <= 4) {

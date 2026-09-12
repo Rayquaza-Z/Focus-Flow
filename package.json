@@ -1,10 +1,14 @@
 {
   "name": "focusflow",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
-  "description": "ADHD-friendly PDF reader that runs entirely in the browser.",
+  "description": "ADHD-friendly PDF reader with AI-powered study tools that runs entirely in the browser.",
   "scripts": {
-    "start": "node server.js",
-    "serve": "node server.js"
+    "start": "npx --yes serve .",
+    "serve": "npx --yes serve .",
+    "lint": "eslint app.js modules/*.js"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0"
   }
 }

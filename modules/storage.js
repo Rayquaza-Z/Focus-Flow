@@ -130,4 +130,49 @@ export class StorageManager {
       console.warn('Failed to save gamification data', e);
     }
   }
+
+  static getAIKey() {
+    try {
+      return localStorage.getItem('focusflow_ai_apikey') || '';
+    } catch (e) {
+      console.warn('Failed to load AI API key', e);
+      return '';
+    }
+  }
+
+  static exportAllData() {
+    try {
+      const data = {
+        settings: this.getSettings(),
+        notes: localStorage.getItem(STORAGE_KEYS.NOTES),
+        checklist: localStorage.getItem(STORAGE_KEYS.CHECKLIST),
+        gamification: localStorage.getItem(STORAGE_KEYS.GAMIFICATION),
+        bookmarks: localStorage.getItem(STORAGE_KEYS.BOOKMARKS),
+        recentFiles: localStorage.getItem(STORAGE_KEYS.RECENT_FILES),
+        aiApiKey: localStorage.getItem('focusflow_ai_apikey'),
+        exportedAt: new Date().toISOString()
+      };
+      return JSON.stringify(data, null, 2);
+    } catch (e) {
+      console.error('Export failed', e);
+      throw e;
+    }
+  }
+
+  static importAllData(jsonString) {
+    try {
+      const data = JSON.parse(jsonString);
+      if (data.settings) this.saveSettings(data.settings);
+      if (data.notes) localStorage.setItem(STORAGE_KEYS.NOTES, data.notes);
+      if (data.checklist) localStorage.setItem(STORAGE_KEYS.CHECKLIST, data.checklist);
+      if (data.gamification) localStorage.setItem(STORAGE_KEYS.GAMIFICATION, data.gamification);
+      if (data.bookmarks) localStorage.setItem(STORAGE_KEYS.BOOKMARKS, data.bookmarks);
+      if (data.recentFiles) localStorage.setItem(STORAGE_KEYS.RECENT_FILES, data.recentFiles);
+      if (data.aiApiKey) localStorage.setItem('focusflow_ai_apikey', data.aiApiKey);
+      return true;
+    } catch (e) {
+      console.error('Import failed', e);
+      throw e;
+    }
+  }
 }
